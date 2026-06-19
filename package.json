@@ -1,0 +1,15 @@
+{
+  "name": "shopper-protection-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser extension that detects manipulative e-commerce tactics client-side.",
+  "scripts": {
+    "test": "node --test extension/tests/*.test.js",
+    "verify:extension": "node scripts/verify-extension.js",
+    "verify:detectors": "node scripts/verify-detectors.js"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1",
+    "playwright": "^1.49.0"
+  }
+}
