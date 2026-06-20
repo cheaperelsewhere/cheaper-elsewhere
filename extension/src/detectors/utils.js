@@ -45,6 +45,11 @@ function speElementsMatchingNameHint(root, hints) {
   return matches;
 }
 
+// Resolution precedence: explicit <label for> / wrapping <label> first (the
+// most intentionally-authored association), then aria-labelledby (may
+// reference multiple space-separated ids - their text is concatenated in
+// order), then aria-label, then a parentElement.textContent fallback for
+// elements with no formal association at all.
 function speLabelTextFor(input) {
   var doc = input.ownerDocument;
   var id = speAttr(input, 'id');
@@ -54,6 +59,23 @@ function speLabelTextFor(input) {
   }
   var ancestorLabel = input.closest ? input.closest('label') : null;
   if (ancestorLabel) return ancestorLabel.textContent || '';
+
+  var labelledBy = speAttr(input, 'aria-labelledby');
+  if (labelledBy && doc.getElementById) {
+    var labelledByText = labelledBy
+      .split(/\s+/)
+      .map(function (refId) {
+        var el = doc.getElementById(refId);
+        return el ? el.textContent || '' : '';
+      })
+      .join(' ')
+      .trim();
+    if (labelledByText) return labelledByText;
+  }
+
+  var ariaLabel = speAttr(input, 'aria-label');
+  if (ariaLabel.trim()) return ariaLabel;
+
   return input.parentElement ? input.parentElement.textContent || '' : '';
 }
 
