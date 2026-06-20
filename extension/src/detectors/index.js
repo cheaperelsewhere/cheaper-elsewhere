@@ -5,6 +5,8 @@ var DETECTOR_FNS = [
   detectReferencePriceDisplay,
   detectConfirmshamingPopup,
   detectPreselectedAddons,
+  detectPreselectedConsent,
+  detectRecurringCharge,
 ];
 
 function runDetectors(root) {

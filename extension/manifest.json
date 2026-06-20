@@ -14,6 +14,8 @@
         "src/detectors/discount-display.js",
         "src/detectors/confirmshaming.js",
         "src/detectors/preselected-addons.js",
+        "src/detectors/preselected-consent.js",
+        "src/detectors/recurring-charge.js",
         "src/detectors/index.js",
         "src/content/indicator.js",
         "src/content/content-script.js"

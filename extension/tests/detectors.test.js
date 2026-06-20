@@ -8,8 +8,10 @@ const { detectDemandCounter } = require('../src/detectors/social-proof.js');
 const { detectReferencePriceDisplay } = require('../src/detectors/discount-display.js');
 const { detectConfirmshamingPopup } = require('../src/detectors/confirmshaming.js');
 const { detectPreselectedAddons } = require('../src/detectors/preselected-addons.js');
+const { detectPreselectedConsent } = require('../src/detectors/preselected-consent.js');
+const { detectRecurringCharge } = require('../src/detectors/recurring-charge.js');
 // index.js (the aggregator) is a content-script-only file - it relies on the
-// six detectors as shared globals rather than require(). Load it through a
+// detectors as shared globals rather than require(). Load it through a
 // tiny vm sandbox providing those globals, so its try/catch crash isolation
 // can be exercised here too. `overrides` lets a test swap in a throwing stub
 // for one detector to prove the others still complete.
@@ -27,6 +29,8 @@ function buildIndexSandbox(overrides) {
       detectReferencePriceDisplay,
       detectConfirmshamingPopup,
       detectPreselectedAddons,
+      detectPreselectedConsent,
+      detectRecurringCharge,
       console,
     },
     overrides
@@ -323,7 +327,7 @@ test('runDetectors: one detector throwing does not stop the others from running'
 
   const results = throwingRunDetectors(doc);
 
-  assert.equal(results.length, 6);
+  assert.equal(results.length, 8);
   const crashed = results.find((r) => r.id === 'detectCountdownTimer');
   assert.equal(crashed.detected, false);
   assert.ok(crashed.error.includes('simulated crash'));
