@@ -3,6 +3,7 @@
   "name": "Shopper Protection",
   "version": "0.1.0",
   "description": "Flags manipulative shopping-page tactics in real time and explains what it found. No account, no tracking.",
+  "host_permissions": ["https://shopper-protection-ebay-worker.dwelluma.workers.dev/*"],
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
@@ -24,7 +25,12 @@
     },
     {
       "matches": ["*://*/*products/*", "*://*/products/*"],
-      "js": ["src/shopify/gtin.js", "src/shopify/extract-product.js", "src/shopify/page-adapter.js"],
+      "js": [
+        "src/shopify/gtin.js",
+        "src/shopify/extract-product.js",
+        "src/shopify/ebay-lookup.js",
+        "src/shopify/page-adapter.js"
+      ],
       "run_at": "document_idle"
     }
   ]

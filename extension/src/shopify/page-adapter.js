@@ -7,6 +7,7 @@
 // the shell at the bottom, which is exercised by Playwright against real
 // pages instead, per the project's pure-core/thin-shell split.
 var SPEExtractProduct = typeof module !== 'undefined' ? require('./extract-product') : SPEExtractProduct;
+var SPEEbayLookup = typeof module !== 'undefined' ? require('./ebay-lookup') : SPEEbayLookup;
 
 // Matches "/products/{handle}" optionally preceded by a locale root of one
 // or more path segments (e.g. "/en-gb", or the real-world "/gb/en" seen on
@@ -161,6 +162,9 @@ if (typeof module === 'undefined') {
     function (product) {
       if (product) {
         console.log('[Shopper Protection] adapter normalized product', product);
+        SPEEbayLookup.lookupCheaperPrice(product, SPEEbayLookup.WORKER_URL).then(function (result) {
+          console.log('[Shopper Protection] ebay-lookup result', result);
+        });
       } else {
         console.log('[Shopper Protection] adapter abstained');
       }
