@@ -9,6 +9,7 @@
 var SPEExtractProduct = typeof module !== 'undefined' ? require('./extract-product') : SPEExtractProduct;
 var SPEEbayLookup = typeof module !== 'undefined' ? require('./ebay-lookup') : SPEEbayLookup;
 var SPEMatchConfidence = typeof module !== 'undefined' ? require('./match-confidence') : SPEMatchConfidence;
+var SPEPriceBadge = typeof module !== 'undefined' ? require('./price-badge') : SPEPriceBadge;
 
 // Matches "/products/{handle}" optionally preceded by a locale root of one
 // or more path segments (e.g. "/en-gb", or the real-world "/gb/en" seen on
@@ -167,6 +168,9 @@ if (typeof module === 'undefined') {
           console.log('[Shopper Protection] ebay-lookup result', result);
           var cheaperListing = SPEMatchConfidence.findCheaperListing(product, result);
           console.log('[Shopper Protection] match-confidence result', cheaperListing);
+          if (cheaperListing) {
+            SPEPriceBadge.mountPriceBadge(cheaperListing, product.selectedVariant.price);
+          }
         });
       } else {
         console.log('[Shopper Protection] adapter abstained');
