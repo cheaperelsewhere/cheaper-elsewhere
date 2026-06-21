@@ -21,6 +21,11 @@
         "src/content/content-script.js"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://*/*products/*", "*://*/products/*"],
+      "js": ["src/shopify/gtin.js", "src/shopify/extract-product.js", "src/shopify/page-adapter.js"],
+      "run_at": "document_idle"
     }
   ]
 }
