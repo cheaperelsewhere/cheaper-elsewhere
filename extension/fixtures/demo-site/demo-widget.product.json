@@ -1,0 +1,24 @@
+{
+  "id": 1234567890,
+  "title": "Demo Widget",
+  "vendor": "Demo Shop",
+  "type": "Widgets",
+  "tags": ["demo"],
+  "description": "<p>A demo widget used only by scripts/demo-cheaper-elsewhere.js. Not a real product.</p>",
+  "url": "/products/demo-widget",
+  "images": [],
+  "featured_image": null,
+  "options": [{ "name": "Title" }],
+  "variants": [
+    {
+      "id": 9001,
+      "title": "Default Title",
+      "options": ["Default Title"],
+      "price": 5000,
+      "compare_at_price": null,
+      "sku": "DEMO-WIDGET-1",
+      "barcode": "4006381333931",
+      "available": true
+    }
+  ]
+}

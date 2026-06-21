@@ -1,0 +1,214 @@
+<!doctype html>
+<!--
+  Dev-only visual fixture for the A6/A7 cheaper-elsewhere badge. Open this
+  file directly in a browser (file://) - no server, no bundler. Not loaded by
+  the extension itself (not referenced from manifest.json), so it is never
+  packaged.
+
+  Loads the real src/shopify/match-confidence.js and src/shopify/price-badge.js
+  and runs five hand-made product/listing pairs through the real
+  findCheaperListing() decision function, then through the real
+  buildSavingsText()/mountPriceBadge() for any case that should produce a
+  badge. This exercises production logic, not a re-implemented simulation of it.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Price badge fixture (A6/A7)</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 820px; margin: 24px auto; padding: 0 16px; color: #222; }
+  h1 { font-size: 20px; }
+  h3 { margin: 0 0 4px; font-size: 15px; }
+  pre { background: #f4f4f4; padding: 8px; border-radius: 6px; overflow-x: auto; font-size: 12px; }
+  .card { border: 1px solid #ccc; border-radius: 8px; padding: 14px 16px; margin-bottom: 18px; }
+  .expect { color: #555; font-style: italic; margin: 0 0 8px; }
+  .result { font-weight: bold; }
+  .result.pass { color: #1a7f1a; }
+  .result.fail { color: #b00; }
+  .error { color: #b00; }
+  .note { color: #555; }
+  .false-saving { background: #b00020; color: #fff; font-weight: bold; padding: 10px; border-radius: 6px; }
+  #module-status { background: #eef; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px; }
+  code { background: #eee; padding: 1px 4px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<h1>Price badge fixture (A6 badge UI / A7 landed-cost gating)</h1>
+<div id="module-status">Loading modules…</div>
+<div id="cases"></div>
+
+<script src="../src/shopify/match-confidence.js"></script>
+<script src="../src/shopify/price-badge.js"></script>
+<script>
+(function () {
+  var statusEl = document.getElementById('module-status');
+  var casesEl = document.getElementById('cases');
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function renderModuleStatus() {
+    var lines = [];
+    if (typeof SPEMatchConfidence === 'undefined') {
+      lines.push(
+        '<p class="error">SPEMatchConfidence is NOT defined - match-confidence.js did not load or did not ' +
+          'attach its global. Check the script path / browser console for a 404.</p>'
+      );
+    } else {
+      lines.push('<p>SPEMatchConfidence exports: <code>' + escapeHtml(Object.keys(SPEMatchConfidence).join(', ')) + '</code></p>');
+      lines.push(
+        '<p>MIN_SAVINGS_PERCENT = ' +
+          SPEMatchConfidence.MIN_SAVINGS_PERCENT +
+          ', MIN_SAVINGS_ABSOLUTE = ' +
+          SPEMatchConfidence.MIN_SAVINGS_ABSOLUTE +
+          '</p>'
+      );
+    }
+    if (typeof SPEPriceBadge === 'undefined') {
+      lines.push(
+        '<p class="error">SPEPriceBadge is NOT defined - price-badge.js did not load or did not attach its global.</p>'
+      );
+    } else {
+      lines.push('<p>SPEPriceBadge exports: <code>' + escapeHtml(Object.keys(SPEPriceBadge).join(', ')) + '</code></p>');
+      lines.push(
+        '<p>AFFILIATE_DISCLOSURE_TEXT (live, verbatim): <strong>' +
+          escapeHtml(SPEPriceBadge.AFFILIATE_DISCLOSURE_TEXT) +
+          '</strong></p>'
+      );
+      lines.push(
+        '<p>AFFILIATE_DISCLOSURE_TEXT_FUTURE_EPN (parked, verbatim): <strong>' +
+          escapeHtml(SPEPriceBadge.AFFILIATE_DISCLOSURE_TEXT_FUTURE_EPN) +
+          '</strong></p>'
+      );
+    }
+    statusEl.innerHTML = lines.join('\n');
+  }
+
+  function product(amount, currency) {
+    return { hasStrongIdentifier: true, selectedVariant: { price: { amount: amount, currency: currency } } };
+  }
+
+  function lookupResult(listing) {
+    return { listings: [listing], abstained: false };
+  }
+
+  var CASES = [
+    {
+      name: 'Case 1 — item £40, ship £0, GBP vs product £50 GBP',
+      expect: 'badge, landed £40, saves £10 / 20%',
+      expectBadge: true,
+      product: product(50, 'GBP'),
+      listing: { url: 'https://example.com/itm/1', price: { amount: 40, currency: 'GBP' }, shippingCost: { amount: 0, currency: 'GBP' } },
+    },
+    {
+      name: 'Case 2 — item £46, ship £6, GBP vs product £50 GBP',
+      expect: 'no badge (landed £52, dearer than £50)',
+      expectBadge: false,
+      product: product(50, 'GBP'),
+      listing: { url: 'https://example.com/itm/2', price: { amount: 46, currency: 'GBP' }, shippingCost: { amount: 6, currency: 'GBP' } },
+    },
+    {
+      name: 'Case 3 — item £17.50, ship £0, GBP vs product £20 GBP',
+      expect: 'no badge (£2.50 saving < £3 absolute floor, though it is ≥10%)',
+      expectBadge: false,
+      product: product(20, 'GBP'),
+      listing: { url: 'https://example.com/itm/3', price: { amount: 17.5, currency: 'GBP' }, shippingCost: { amount: 0, currency: 'GBP' } },
+    },
+    {
+      name: 'Case 4 — item £30, ship NULL, GBP vs product £50 GBP',
+      expect: 'no badge — null shipping must NOT be treated as £0 (the false-saving case)',
+      expectBadge: false,
+      critical: true,
+      product: product(50, 'GBP'),
+      listing: { url: 'https://example.com/itm/4', price: { amount: 30, currency: 'GBP' }, shippingCost: null },
+    },
+    {
+      name: 'Case 5 — item £30, ship £0, USD vs product £50 GBP',
+      expect: 'no badge — currency mismatch, this codebase never does FX conversion',
+      expectBadge: false,
+      product: product(50, 'GBP'),
+      listing: { url: 'https://example.com/itm/5', price: { amount: 30, currency: 'USD' }, shippingCost: { amount: 0, currency: 'USD' } },
+    },
+  ];
+
+  function renderCase(c) {
+    var card = document.createElement('div');
+    card.className = 'card';
+
+    var decision = null;
+    var decisionError = null;
+    try {
+      decision = SPEMatchConfidence.findCheaperListing(c.product, lookupResult(c.listing));
+    } catch (e) {
+      decisionError = e;
+    }
+
+    var gotBadge = !!decision;
+    var pass = !decisionError && gotBadge === c.expectBadge;
+
+    var html = '';
+    html += '<h3>' + escapeHtml(c.name) + '</h3>';
+    html += '<p class="expect">Expected: ' + escapeHtml(c.expect) + '</p>';
+    html += '<pre>' + escapeHtml(JSON.stringify({ product: c.product, listing: c.listing }, null, 2)) + '</pre>';
+
+    if (decisionError) {
+      html += '<p class="error">findCheaperListing() threw: ' + escapeHtml(decisionError.message) + '</p>';
+    } else {
+      html += '<p>findCheaperListing() returned: <code>' + escapeHtml(decision ? JSON.stringify(decision) : 'null') + '</code></p>';
+    }
+
+    if (c.critical && gotBadge) {
+      html +=
+        '<p class="false-saving">FALSE SAVING DETECTED — THIS IS A BUG. Null shipping was treated as free, ' +
+        'which is exactly the misleading comparison this feature must never produce.</p>';
+    }
+
+    html +=
+      '<p class="result ' +
+      (pass ? 'pass' : 'fail') +
+      '">' +
+      (pass ? 'PASS' : 'FAIL') +
+      ' — ' +
+      (gotBadge ? 'badge would render' : 'no badge (abstained)') +
+      '</p>';
+
+    if (gotBadge && !decisionError) {
+      var savingsError = null;
+      var text = null;
+      try {
+        text = SPEPriceBadge.buildSavingsText(c.product.selectedVariant.price, decision);
+      } catch (e) {
+        savingsError = e;
+      }
+      if (savingsError) {
+        html += '<p class="error">buildSavingsText() threw: ' + escapeHtml(savingsError.message) + '</p>';
+      } else {
+        html += '<p>buildSavingsText(): <strong>' + escapeHtml(text) + '</strong></p>';
+      }
+
+      try {
+        SPEPriceBadge.mountPriceBadge(decision, c.product.selectedVariant.price);
+        html += '<p class="note">Real badge mounted — look bottom-left of this page (only one case here qualifies, so only one badge ever mounts).</p>';
+      } catch (e) {
+        html += '<p class="error">mountPriceBadge() threw: ' + escapeHtml(e.message) + '</p>';
+      }
+    }
+
+    card.innerHTML = html;
+    casesEl.appendChild(card);
+  }
+
+  try {
+    renderModuleStatus();
+  } catch (e) {
+    statusEl.innerHTML = '<p class="error">Error introspecting modules: ' + escapeHtml(e.message) + '</p>';
+  }
+
+  CASES.forEach(renderCase);
+})();
+</script>
+</body>
+</html>

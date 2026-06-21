@@ -1,0 +1,28 @@
+<!doctype html>
+<!--
+  Dev-only offline fixture page for scripts/demo-cheaper-elsewhere.js. Not a
+  real store, not shipped with the extension, not referenced from manifest.json.
+  Served locally (see the script) at /products/demo-widget so the real
+  page-adapter.js sees a canonical Shopify product URL.
+
+  The meta tag below is one of the three markers isLikelyShopifyPage() checks
+  for (extension/src/shopify/page-adapter.js) so the adapter's pre-fetch gate
+  passes without needing a real cdn.shopify.com network request. The JSON-LD
+  block supplies the DOM-sourced currency the adapter reads (currency isn't
+  present in /products/{handle}.js itself).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Demo Widget – Demo Shop (offline fixture)</title>
+<meta name="shopify-digital-wallet" content="dummy-token-not-real" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Product","name":"Demo Widget","offers":{"@type":"Offer","priceCurrency":"GBP","price":"50.00"}}
+</script>
+</head>
+<body>
+<h1>Demo Widget</h1>
+<p>£50.00 GBP</p>
+<p>Offline fixture page for scripts/demo-cheaper-elsewhere.js — not a real store.</p>
+</body>
+</html>
