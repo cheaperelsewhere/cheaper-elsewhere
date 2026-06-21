@@ -11,11 +11,44 @@
 // abstains rather than suggest a possibly-wrong "cheaper" item. Same house
 // style as the currency/marketplace abstains elsewhere in this build.
 //
-// Known limitation: eBay listing prices don't include shipping cost (the
-// worker's normalizeSearchResponse doesn't carry shipping data at all) - a
-// listing that's marginally cheaper on item price alone could cost more once
-// shipping is added. Not handled here; flag to planning if real-world
-// testing shows this produces misleading suggestions.
+// Unit A7: the comparison is on total landed cost (item price + shipping),
+// not item price alone - a listing that's marginally cheaper on item price
+// can cost more once shipping is added, which would be a false "cheaper"
+// claim. A landed cost must beat the product's price by MIN_SAVINGS_PERCENT
+// AND MIN_SAVINGS_ABSOLUTE to qualify. MIN_SAVINGS_ABSOLUTE is a flat number
+// in whatever currency the comparison is already in - this codebase never
+// converts currency, so "3" applies the same whether that currency happens
+// to be GBP, USD, or EUR.
+var MIN_SAVINGS_PERCENT = 0.1;
+var MIN_SAVINGS_ABSOLUTE = 3;
+
+function meetsSavingsThreshold(savingsAmount, ownAmount) {
+  return savingsAmount >= ownAmount * MIN_SAVINGS_PERCENT && savingsAmount >= MIN_SAVINGS_ABSOLUTE;
+}
+
+// listing.shippingCost is set by the worker's normalizeSearchResponse (the
+// cheapest numeric shippingOptions[] entry, or null if every option is
+// calculated-at-checkout/pickup/freight with no usable number - see
+// worker/src/ebay-response.js). A null or differently-currencied shipping
+// cost means landed cost can't be honestly computed, so this returns null
+// and the listing abstains rather than being treated as free shipping.
+function resolveLandedAmount(listing, currency) {
+  var shipping = listing.shippingCost;
+  if (!shipping || typeof shipping.amount !== 'number' || shipping.currency !== currency) return null;
+  return listing.price.amount + shipping.amount;
+}
+
+// Shallow-copies a listing's own fields and adds landedCost - avoids
+// hardcoding the worker's listing field names here, and avoids mutating the
+// input, since this function (like findCheaperListing) is pure.
+function withLandedCost(listing, landedAmount, currency) {
+  var result = {};
+  for (var key in listing) {
+    if (listing.hasOwnProperty(key)) result[key] = listing[key];
+  }
+  result.landedCost = { amount: landedAmount, currency: currency };
+  return result;
+}
 
 function findCheaperListing(product, lookupResult) {
   if (!product || !product.hasStrongIdentifier) return null;
@@ -27,7 +60,11 @@ function findCheaperListing(product, lookupResult) {
   var ownPrice = product.selectedVariant && product.selectedVariant.price;
   if (!ownPrice || typeof ownPrice.amount !== 'number') return null;
 
-  var cheaper = listings.filter(function (listing) {
+  // Stage 1: same currency + numeric price + cheaper on item price alone.
+  // Shipping only adds cost, so a listing that isn't even cheaper here can
+  // never qualify once shipping is added - no point resolving shipping for
+  // listings that were never going to qualify.
+  var priceCandidates = listings.filter(function (listing) {
     return (
       listing &&
       listing.price &&
@@ -36,14 +73,37 @@ function findCheaperListing(product, lookupResult) {
       listing.price.amount < ownPrice.amount
     );
   });
-  if (cheaper.length === 0) return null;
+  if (priceCandidates.length === 0) return null;
 
-  return cheaper.reduce(function (best, listing) {
-    return listing.price.amount < best.price.amount ? listing : best;
+  // Stage 2: resolve landed cost only for stage-1 survivors, dropping any
+  // listing whose shipping cost can't be confidently determined.
+  var landedCandidates = [];
+  priceCandidates.forEach(function (listing) {
+    var landedAmount = resolveLandedAmount(listing, ownPrice.currency);
+    if (landedAmount !== null) {
+      landedCandidates.push({ listing: listing, landedAmount: landedAmount });
+    }
   });
+  if (landedCandidates.length === 0) return null;
+
+  // Stage 3: only landed costs that clear the minimum-savings threshold
+  // qualify as a genuinely "cheaper" suggestion.
+  var qualifying = landedCandidates.filter(function (candidate) {
+    return meetsSavingsThreshold(ownPrice.amount - candidate.landedAmount, ownPrice.amount);
+  });
+  if (qualifying.length === 0) return null;
+
+  var best = qualifying.reduce(function (champion, candidate) {
+    return candidate.landedAmount < champion.landedAmount ? candidate : champion;
+  });
+
+  return withLandedCost(best.listing, best.landedAmount, ownPrice.currency);
 }
 
 var SPEMatchConfidence = {
+  MIN_SAVINGS_PERCENT: MIN_SAVINGS_PERCENT,
+  MIN_SAVINGS_ABSOLUTE: MIN_SAVINGS_ABSOLUTE,
+  meetsSavingsThreshold: meetsSavingsThreshold,
   findCheaperListing: findCheaperListing,
 };
 

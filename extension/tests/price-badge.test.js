@@ -13,24 +13,46 @@ const { JSDOM } = require('jsdom');
 const { AFFILIATE_DISCLOSURE_TEXT, buildSavingsText, mountPriceBadge } = require('../src/shopify/price-badge.js');
 
 // --- buildSavingsText ---
+// Unit A7: buildSavingsText now takes the full listing (price + landedCost),
+// not just an item price - the displayed "save" figure must come from
+// landedCost (item + shipping), matching the figure findCheaperListing's
+// decision was actually made on.
 
-test('buildSavingsText: formats price and savings in USD', () => {
-  const text = buildSavingsText({ amount: 50, currency: 'USD' }, { amount: 11.99, currency: 'USD' });
+test('buildSavingsText: formats price and (landed) savings in USD', () => {
+  const listing = { price: { amount: 11.99, currency: 'USD' }, landedCost: { amount: 11.99, currency: 'USD' } };
+  const text = buildSavingsText({ amount: 50, currency: 'USD' }, listing);
   assert.equal(text, 'Found for $11.99 on eBay – save $38.01');
 });
 
-test('buildSavingsText: formats price and savings in GBP', () => {
-  const text = buildSavingsText({ amount: 30, currency: 'GBP' }, { amount: 12.5, currency: 'GBP' });
+test('buildSavingsText: formats price and (landed) savings in GBP', () => {
+  const listing = { price: { amount: 12.5, currency: 'GBP' }, landedCost: { amount: 12.5, currency: 'GBP' } };
+  const text = buildSavingsText({ amount: 30, currency: 'GBP' }, listing);
   assert.equal(text, 'Found for £12.50 on eBay – save £17.50');
 });
 
-test('buildSavingsText: missing ownPrice or listingPrice -> null, no crash', () => {
-  assert.equal(buildSavingsText(null, { amount: 10, currency: 'USD' }), null);
+test('buildSavingsText: save reflects landed cost (item + shipping), not item price alone', () => {
+  const listing = { price: { amount: 11.99, currency: 'USD' }, landedCost: { amount: 14.99, currency: 'USD' } };
+  const text = buildSavingsText({ amount: 50, currency: 'USD' }, listing);
+  assert.equal(text, 'Found for $11.99 on eBay – save $35.01');
+});
+
+test('buildSavingsText: missing ownPrice or listing -> null, no crash', () => {
+  const listing = { price: { amount: 10, currency: 'USD' }, landedCost: { amount: 10, currency: 'USD' } };
+  assert.equal(buildSavingsText(null, listing), null);
   assert.equal(buildSavingsText({ amount: 10, currency: 'USD' }, null), null);
 });
 
+test('buildSavingsText: listing missing landedCost (e.g. pre-A7 shape) -> null, no crash', () => {
+  const listing = { price: { amount: 10, currency: 'USD' } };
+  assert.equal(buildSavingsText({ amount: 50, currency: 'USD' }, listing), null);
+});
+
 test('buildSavingsText: malformed currency code falls back instead of throwing (Intl.NumberFormat rejects non-3-letter codes)', () => {
-  const text = buildSavingsText({ amount: 50, currency: 'NOTACURRENCY' }, { amount: 10, currency: 'NOTACURRENCY' });
+  const listing = {
+    price: { amount: 10, currency: 'NOTACURRENCY' },
+    landedCost: { amount: 10, currency: 'NOTACURRENCY' },
+  };
+  const text = buildSavingsText({ amount: 50, currency: 'NOTACURRENCY' }, listing);
   assert.equal(text, 'Found for NOTACURRENCY 10.00 on eBay – save NOTACURRENCY 40.00');
 });
 
@@ -44,7 +66,11 @@ function freshDom() {
 
 test('mountPriceBadge: mounts a shadow-DOM-isolated host with a collapsed badge and a hidden panel', () => {
   freshDom();
-  const listing = { url: 'https://sandbox.ebay.com/itm/1', price: { amount: 11.99, currency: 'USD' } };
+  const listing = {
+    url: 'https://sandbox.ebay.com/itm/1',
+    price: { amount: 11.99, currency: 'USD' },
+    landedCost: { amount: 11.99, currency: 'USD' },
+  };
   mountPriceBadge(listing, { amount: 50, currency: 'USD' });
 
   const host = document.getElementById('shopper-protection-ebay-badge');
@@ -59,7 +85,11 @@ test('mountPriceBadge: mounts a shadow-DOM-isolated host with a collapsed badge 
 
 test('mountPriceBadge: clicking the badge toggles the panel open and closed', () => {
   freshDom();
-  const listing = { url: 'https://sandbox.ebay.com/itm/1', price: { amount: 11.99, currency: 'USD' } };
+  const listing = {
+    url: 'https://sandbox.ebay.com/itm/1',
+    price: { amount: 11.99, currency: 'USD' },
+    landedCost: { amount: 11.99, currency: 'USD' },
+  };
   mountPriceBadge(listing, { amount: 50, currency: 'USD' });
 
   const host = document.getElementById('shopper-protection-ebay-badge');
@@ -77,7 +107,11 @@ test('mountPriceBadge: clicking the badge toggles the panel open and closed', ()
 
 test('mountPriceBadge: panel contains the eBay link and the exact affiliate disclosure text', () => {
   freshDom();
-  const listing = { url: 'https://sandbox.ebay.com/itm/1', price: { amount: 11.99, currency: 'USD' } };
+  const listing = {
+    url: 'https://sandbox.ebay.com/itm/1',
+    price: { amount: 11.99, currency: 'USD' },
+    landedCost: { amount: 11.99, currency: 'USD' },
+  };
   mountPriceBadge(listing, { amount: 50, currency: 'USD' });
 
   const host = document.getElementById('shopper-protection-ebay-badge');
@@ -92,7 +126,11 @@ test('mountPriceBadge: panel contains the eBay link and the exact affiliate disc
 
 test('mountPriceBadge: dismiss button removes the host from the document', () => {
   freshDom();
-  const listing = { url: 'https://sandbox.ebay.com/itm/1', price: { amount: 11.99, currency: 'USD' } };
+  const listing = {
+    url: 'https://sandbox.ebay.com/itm/1',
+    price: { amount: 11.99, currency: 'USD' },
+    landedCost: { amount: 11.99, currency: 'USD' },
+  };
   mountPriceBadge(listing, { amount: 50, currency: 'USD' });
 
   const host = document.getElementById('shopper-protection-ebay-badge');
@@ -104,7 +142,11 @@ test('mountPriceBadge: dismiss button removes the host from the document', () =>
 
 test('mountPriceBadge: a second mount call is idempotent, returning the existing API instead of stacking a duplicate', () => {
   freshDom();
-  const listing = { url: 'https://sandbox.ebay.com/itm/1', price: { amount: 11.99, currency: 'USD' } };
+  const listing = {
+    url: 'https://sandbox.ebay.com/itm/1',
+    price: { amount: 11.99, currency: 'USD' },
+    landedCost: { amount: 11.99, currency: 'USD' },
+  };
   const first = mountPriceBadge(listing, { amount: 50, currency: 'USD' });
   const second = mountPriceBadge(listing, { amount: 50, currency: 'USD' });
 

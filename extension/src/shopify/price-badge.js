@@ -10,8 +10,16 @@
 // just-unusual host page might otherwise leak into the shadow tree (font,
 // color, line-height, etc.) before this file's own rules apply.
 
-var AFFILIATE_DISCLOSURE_TEXT =
+// Parked (kept, not used) until eBay Partner Network production credentials
+// exist - see CLAUDE.md and worker/.dev.vars.example. EBAY_CAMPAIGN_ID is
+// currently unset (confirmed in worker/.dev.vars during this unit's live
+// verification), so links carry no affiliate tracking and no commission is
+// actually earned yet - showing this text now would be a false claim.
+var AFFILIATE_DISCLOSURE_TEXT_FUTURE_EPN =
   'This extension earns a commission from eBay purchases made through this link, at no extra cost to you.';
+
+// Accurate for the current (sandbox, no EPN enrollment) build stage.
+var AFFILIATE_DISCLOSURE_TEXT = 'This extension links to eBay listings. No affiliate commission is earned at this stage.';
 
 var BADGE_CSS =
   ':host { all: initial; }' +
@@ -37,12 +45,18 @@ function formatMoney(amount, currency) {
 
 // Pure text-building, kept separate from DOM construction so it is
 // unit-testable without jsdom.
-function buildSavingsText(ownPrice, listingPrice) {
-  if (!ownPrice || !listingPrice) return null;
-  var savings = ownPrice.amount - listingPrice.amount;
+//
+// Unit A7: takes the full listing (not just its item price) because the
+// "save" figure must come from listing.landedCost (item price + shipping -
+// see match-confidence.js's findCheaperListing), the figure the cheaper-
+// match decision was actually made on. Showing an item-only saving here
+// would tell the user a number that doesn't match the decision behind it.
+function buildSavingsText(ownPrice, listing) {
+  if (!ownPrice || !listing || !listing.price || !listing.landedCost) return null;
+  var savings = ownPrice.amount - listing.landedCost.amount;
   return (
-    'Found for ' + formatMoney(listingPrice.amount, listingPrice.currency) + ' on eBay – save ' +
-    formatMoney(savings, listingPrice.currency)
+    'Found for ' + formatMoney(listing.price.amount, listing.price.currency) + ' on eBay – save ' +
+    formatMoney(savings, listing.landedCost.currency)
   );
 }
 
@@ -70,7 +84,7 @@ function mountPriceBadge(cheaperListing, ownPrice) {
   button.type = 'button';
   button.className = 'badge-button';
   button.setAttribute('aria-expanded', 'false');
-  button.textContent = buildSavingsText(ownPrice, cheaperListing.price) || 'Found cheaper on eBay';
+  button.textContent = buildSavingsText(ownPrice, cheaperListing) || 'Found cheaper on eBay';
 
   var panel = document.createElement('div');
   panel.className = 'panel';
@@ -120,6 +134,7 @@ function mountPriceBadge(cheaperListing, ownPrice) {
 
 var SPEPriceBadge = {
   AFFILIATE_DISCLOSURE_TEXT: AFFILIATE_DISCLOSURE_TEXT,
+  AFFILIATE_DISCLOSURE_TEXT_FUTURE_EPN: AFFILIATE_DISCLOSURE_TEXT_FUTURE_EPN,
   buildSavingsText: buildSavingsText,
   mountPriceBadge: mountPriceBadge,
 };

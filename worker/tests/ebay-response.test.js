@@ -18,6 +18,7 @@ test('normalizes a complete item and prefers the affiliate URL', () => {
     image: 'https://i.ebayimg.com/images/g/example/s-l500.jpg',
     condition: 'New',
     seller: 'exampleseller123',
+    shippingCost: null,
   });
 });
 
@@ -43,4 +44,52 @@ test('drops items with a price but no usable url', () => {
 test('returns an empty array for missing or empty itemSummaries', () => {
   assert.deepEqual(normalizeSearchResponse({}), []);
   assert.deepEqual(normalizeSearchResponse({ itemSummaries: [] }), []);
+});
+
+// --- Unit A7: shippingCost extraction ---
+
+function itemWith(shippingOptions) {
+  return {
+    itemId: 'x',
+    title: 't',
+    price: { value: '5.00', currency: 'USD' },
+    itemWebUrl: 'https://www.ebay.com/itm/x',
+    shippingOptions: shippingOptions,
+  };
+}
+
+test('shippingCost: a free ($0.00) shipping option is captured, not treated as missing', () => {
+  const json = { itemSummaries: [itemWith([{ shippingCost: { value: '0.00', currency: 'USD' } }])] };
+  assert.deepEqual(normalizeSearchResponse(json)[0].shippingCost, { amount: 0, currency: 'USD' });
+});
+
+test('shippingCost: among several options, the cheapest numeric one is used', () => {
+  const json = {
+    itemSummaries: [
+      itemWith([
+        { shippingCost: { value: '12.50', currency: 'USD' } },
+        { shippingCost: { value: '4.25', currency: 'USD' } },
+        { shippingCost: { value: '6.00', currency: 'USD' } },
+      ]),
+    ],
+  };
+  assert.deepEqual(normalizeSearchResponse(json)[0].shippingCost, { amount: 4.25, currency: 'USD' });
+});
+
+test('shippingCost: missing shippingOptions entirely -> null', () => {
+  const json = { itemSummaries: [itemWith(undefined)] };
+  assert.equal(normalizeSearchResponse(json)[0].shippingCost, null);
+});
+
+test('shippingCost: options present but none have a usable numeric value (calculated/pickup/freight) -> null', () => {
+  const json = {
+    itemSummaries: [
+      itemWith([
+        { shippingCostType: 'CALCULATED' },
+        { shippingCostType: 'PICKUP' },
+        { shippingCost: { value: 'Calculated', currency: 'USD' } },
+      ]),
+    ],
+  };
+  assert.equal(normalizeSearchResponse(json)[0].shippingCost, null);
 });
