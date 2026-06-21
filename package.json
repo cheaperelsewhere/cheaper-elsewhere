@@ -4,7 +4,7 @@
   "private": true,
   "description": "Browser extension that detects manipulative e-commerce tactics client-side.",
   "scripts": {
-    "test": "node --test extension/tests/*.test.js",
+    "test": "node --test extension/tests/*.test.js ; node --test worker/tests/*.test.js",
     "verify:extension": "node scripts/verify-extension.js",
     "verify:detectors": "node scripts/verify-detectors.js",
     "verify:adapter": "node scripts/verify-adapter.js"

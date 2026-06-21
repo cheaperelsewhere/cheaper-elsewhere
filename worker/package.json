@@ -1,0 +1,13 @@
+{
+  "name": "spe-ebay-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker proxying eBay Browse API lookups for the price-comparison feature.",
+  "scripts": {
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "href": "https://api.sandbox.ebay.com/buy/browse/v1/item_summary/search?q=wireless%20mouse&limit=10",
+  "total": 2,
+  "limit": 10,
+  "offset": 0,
+  "itemSummaries": [
+    {
+      "itemId": "v1|110587956912|0",
+      "title": "Example Wireless Mouse - Black",
+      "price": { "value": "19.99", "currency": "USD" },
+      "itemWebUrl": "https://www.ebay.com/itm/110587956912",
+      "itemAffiliateWebUrl": "https://www.ebay.com/itm/110587956912?campid=affiliate123",
+      "image": { "imageUrl": "https://i.ebayimg.com/images/g/example/s-l500.jpg" },
+      "condition": "New",
+      "conditionId": "1000",
+      "seller": { "username": "exampleseller123", "feedbackPercentage": "99.5", "feedbackScore": 4821 }
+    },
+    {
+      "itemId": "v1|220987654321|0",
+      "title": "Example Wireless Mouse - White (no price listed)",
+      "itemWebUrl": "https://www.ebay.com/itm/220987654321",
+      "condition": "Used",
+      "seller": { "username": "anotherseller", "feedbackPercentage": "98.2" }
+    }
+  ]
+}

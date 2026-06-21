@@ -23,7 +23,8 @@ Project layout:
 ```
 extension/   Manifest V3 extension: Shopify product extraction + live-page adapter (current focus),
              plus the parked dark-pattern detectors
-worker/      Cloudflare Worker proxy to the eBay Browse API — not built yet (planned, A-series)
+worker/      Cloudflare Worker proxy to the eBay Browse API (lookup built; not deployed or wired up
+             to the extension yet — A-series)
 scripts/     Dev-only verification tools that load the real unpacked extension in headless Chromium
 docs/        Append-only gate/audit reports for the (parked) detector-signal build (see "Gate
              before you build") — the newer A-series Shopify work doesn't use this convention
@@ -32,9 +33,14 @@ docs/        Append-only gate/audit reports for the (parked) detector-signal bui
 ## Commands
 
 ```
-npm test                         # unit tests: node --test extension/tests/*.test.js (jsdom, no browser)
+npm test                         # unit tests: extension (jsdom, no browser) + worker (mocked fetch, no real eBay calls)
 node --test extension/tests/gtin.test.js   # run a single test file
 node --test --test-name-pattern="<regex>" extension/tests/*.test.js   # run tests by name
+node --test worker/tests/*.test.js         # worker unit tests only
+
+cd worker && npx wrangler dev     # run the worker locally (no deploy). Needs worker/.dev.vars
+                                   #   (copy from .dev.vars.example) for real eBay calls to succeed;
+                                   #   without it, every query still abstains/502s correctly.
 
 npm run verify:extension          # Playwright: loads the real unpacked extension, checks indicator
                                    #   state transitions + shadow-DOM CSS isolation. Usage: [url] [profileDir]

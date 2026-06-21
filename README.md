@@ -19,8 +19,14 @@ Build is numbered "A1, A2, ..." (A-series). Units complete so far:
 - [x] A2 - live-page adapter (`extension/src/shopify/page-adapter.js`): gathers real-page inputs
       (URL, fetched product JSON, DOM-sourced currency), calls `extractProduct`, or abstains when
       it can't determine something confidently. Logs the result to console for now - no UI yet.
-- [ ] A3+ - eBay Browse API lookup via a Cloudflare Worker, match-confidence logic, suggestion UI
-      + affiliate disclosure (gated on a deliberate user action, not just page load)
+- [x] A3 - eBay Browse API lookup via a Cloudflare Worker (`worker/`): takes a minimal
+      `{ gtin, title, currency }` query, builds an eBay Browse API search (GTIN exact-match
+      preferred over keyword search), authenticates via OAuth2 client-credentials, and returns
+      normalized candidate listings or abstains. Local-only so far (`wrangler dev`) - not deployed,
+      and unexercised against the real eBay API since there's no eBay developer account/credentials
+      yet. Not yet wired up to the extension.
+- [ ] A4+ - match-confidence logic, suggestion UI + affiliate disclosure (gated on a deliberate user
+      action, not just page load), wiring the extension to call the Worker
 
 ## Detector build (parked)
 
@@ -46,7 +52,7 @@ extended:
 ```
 extension/   Manifest V3 browser extension: Shopify product extraction + live-page adapter
              (current focus), plus the parked dark-pattern detectors
-worker/      Cloudflare Worker proxy to the eBay Browse API (not built yet)
+worker/      Cloudflare Worker proxy to the eBay Browse API (lookup built, not deployed/wired up yet)
 scripts/     Dev-only verification tools (load the real extension in headless Chromium)
 ```
 
@@ -58,3 +64,15 @@ npm run verify:extension  # loads the real extension, checks indicator + shadow-
 npm run verify:detectors  # loads the real extension against fixture pages, checks all 6 parked signals fire correctly
 npm run verify:adapter    # loads the real extension against live Shopify stores, checks the price-comparison adapter
 ```
+
+## Worker (eBay lookup)
+
+```
+cd worker && npm run dev   # wrangler dev, local-only - no deploy
+```
+
+Local dev needs eBay sandbox credentials in `worker/.dev.vars` (gitignored; copy
+`worker/.dev.vars.example` and fill in `EBAY_CLIENT_ID` / `EBAY_CLIENT_SECRET` from a sandbox app at
+developer.ebay.com). Without them, the worker still runs and abstains/502s correctly - see
+`worker/tests/`, which cover all of the worker's logic against mocked eBay responses without needing
+real credentials at all.

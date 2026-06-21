@@ -1,0 +1,9 @@
+# Copy to .dev.vars (already gitignored) and fill in for local `wrangler dev`.
+# Get sandbox credentials by creating an app at developer.ebay.com -> My Account
+# -> Application Keys (sandbox keyset). Production credentials require eBay
+# Partner Network enrollment for affiliate-tracked links.
+EBAY_CLIENT_ID=
+EBAY_CLIENT_SECRET=
+# Optional: eBay Partner Network campaign ID. Without it, search results come
+# back with plain itemWebUrl links (no affiliate tracking, no commission).
+EBAY_CAMPAIGN_ID=
