@@ -24,6 +24,9 @@ var AFFILIATE_DISCLOSURE_TEXT = 'This extension links to eBay listings. No affil
 var BADGE_CSS =
   ':host { all: initial; }' +
   '* { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; box-sizing: border-box; }' +
+  '.badge-wrap { position: relative; display: inline-block; }' +
+  '.ad-tag { position: absolute; top: -8px; left: -6px; background: #555; color: #fff; font-size: 9px;' +
+  ' font-weight: 700; letter-spacing: 0.4px; padding: 1px 5px; border-radius: 4px; line-height: 1.4; pointer-events: none; }' +
   '.badge-button { font-size: 13px; line-height: 1.3; color: #fff; background: #2a8703; border: none;' +
   ' border-radius: 8px; padding: 10px 14px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3);' +
   ' max-width: 260px; text-align: left; display: block; }' +
@@ -80,6 +83,18 @@ function mountPriceBadge(cheaperListing, ownPrice) {
   style.textContent = BADGE_CSS;
   shadow.appendChild(style);
 
+  // A8: the full disclosure paragraph below lives inside the collapsible
+  // panel, hidden until the user clicks the badge - so on its own it doesn't
+  // satisfy the compliance floor of disclosing the affiliate relationship
+  // *before* any click. This "Ad" tag sits outside the panel, always visible
+  // alongside the collapsed button.
+  var wrap = document.createElement('div');
+  wrap.className = 'badge-wrap';
+
+  var adTag = document.createElement('span');
+  adTag.className = 'ad-tag';
+  adTag.textContent = 'Ad';
+
   var button = document.createElement('button');
   button.type = 'button';
   button.className = 'badge-button';
@@ -120,7 +135,10 @@ function mountPriceBadge(cheaperListing, ownPrice) {
     button.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
   });
 
-  shadow.appendChild(button);
+  wrap.appendChild(adTag);
+  wrap.appendChild(button);
+
+  shadow.appendChild(wrap);
   shadow.appendChild(panel);
 
   var api = {

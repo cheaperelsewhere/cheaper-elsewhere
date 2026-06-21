@@ -92,10 +92,58 @@ async function main() {
       },
     },
     {
-      label: 'allbirds.com (no locale prefix)',
+      label: 'allbirds.com (no locale prefix, JSON-LD under "@type": "ProductGroup")',
       url: 'https://www.allbirds.com/products/womens-tree-dasher-relay-natural-black-twilight-teal',
       assert: function (product) {
         return !!product && product.currency === 'USD' && product.vendor === 'Allbirds';
+      },
+    },
+    {
+      // A8.2: non-AUD/non-GBP currency *and* JSON-LD "offers" as an array
+      // (one Offer per variant) rather than a single object - confirmed by
+      // direct curl inspection of the live page before adding this check.
+      label: 'frankgreen.com.au (AUD, JSON-LD offers as an array)',
+      url: 'https://frankgreen.com.au/products/customisable-original-reusable-bottle-with-grip-and-sip-lid-25oz-740ml',
+      assert: function (product) {
+        return (
+          !!product &&
+          product.currency === 'AUD' &&
+          product.vendor === 'Original Bottles' &&
+          product.selectedVariant !== null
+        );
+      },
+    },
+    {
+      // A8.2: non-USD/non-GBP currency, JSON-LD offers as a single object,
+      // www-prefixed canonical host (the bare apex domain 301s here).
+      label: 'danielwellington.com (EUR, JSON-LD offers as an object)',
+      url: 'https://www.danielwellington.com/products/letter-necklace-gold',
+      assert: function (product) {
+        return (
+          !!product &&
+          product.currency === 'EUR' &&
+          product.vendor === 'Daniel Wellington' &&
+          product.selectedVariant !== null
+        );
+      },
+    },
+    {
+      label: 'nativecos.com (USD, different theme/vendor)',
+      url: 'https://www.nativecos.com/products/scent-stacking-set',
+      assert: function (product) {
+        return !!product && product.currency === 'USD' && product.vendor === 'Native' && product.selectedVariant !== null;
+      },
+    },
+    {
+      // A8.2: confirmed by direct curl inspection - this real product page
+      // has no JSON-LD block at all and no og:price:currency / product:price:
+      // currency meta tag, only the main-world-only `Shopify.currency` global
+      // this adapter deliberately cannot reach (see CLAUDE.md). Expected to
+      // abstain on currency - a genuine real-world abstain, not a bug.
+      label: 'tentree.com (no DOM-sourced currency signal at all - expect an honest abstain)',
+      url: 'https://www.tentree.com/products/inmotion-apex-hat-nightfall',
+      assert: function (product, abstained) {
+        return abstained === true;
       },
     },
     {

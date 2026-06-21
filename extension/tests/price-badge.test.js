@@ -105,6 +105,24 @@ test('mountPriceBadge: clicking the badge toggles the panel open and closed', ()
   assert.equal(button.getAttribute('aria-expanded'), 'false');
 });
 
+test('mountPriceBadge: an "Ad" tag is always visible alongside the collapsed button, not hidden inside the panel', () => {
+  freshDom();
+  const listing = {
+    url: 'https://sandbox.ebay.com/itm/1',
+    price: { amount: 11.99, currency: 'USD' },
+    landedCost: { amount: 11.99, currency: 'USD' },
+  };
+  mountPriceBadge(listing, { amount: 50, currency: 'USD' });
+
+  const host = document.getElementById('shopper-protection-ebay-badge');
+  const adTag = host.shadowRoot.querySelector('.ad-tag');
+  const panel = host.shadowRoot.querySelector('.panel');
+
+  assert.equal(adTag.textContent, 'Ad');
+  assert.ok(!panel.contains(adTag), 'the Ad tag must live outside the collapsible panel');
+  assert.equal(panel.getAttribute('aria-hidden'), 'true', "panel starts hidden, but the Ad tag isn't inside it");
+});
+
 test('mountPriceBadge: panel contains the eBay link and the exact affiliate disclosure text', () => {
   freshDom();
   const listing = {
