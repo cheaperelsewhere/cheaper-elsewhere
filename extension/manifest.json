@@ -29,6 +29,7 @@
         "src/shopify/gtin.js",
         "src/shopify/extract-product.js",
         "src/shopify/ebay-lookup.js",
+        "src/shopify/match-confidence.js",
         "src/shopify/page-adapter.js"
       ],
       "run_at": "document_idle"
