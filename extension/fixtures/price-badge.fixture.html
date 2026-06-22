@@ -74,13 +74,18 @@
     } else {
       lines.push('<p>SPEPriceBadge exports: <code>' + escapeHtml(Object.keys(SPEPriceBadge).join(', ')) + '</code></p>');
       lines.push(
-        '<p>AFFILIATE_DISCLOSURE_TEXT (live, verbatim): <strong>' +
-          escapeHtml(SPEPriceBadge.AFFILIATE_DISCLOSURE_TEXT) +
+        '<p>AFFILIATE_DISCLOSURE_TEXT_UNTRACKED (verbatim): <strong>' +
+          escapeHtml(SPEPriceBadge.AFFILIATE_DISCLOSURE_TEXT_UNTRACKED) +
           '</strong></p>'
       );
       lines.push(
-        '<p>AFFILIATE_DISCLOSURE_TEXT_FUTURE_EPN (parked, verbatim): <strong>' +
-          escapeHtml(SPEPriceBadge.AFFILIATE_DISCLOSURE_TEXT_FUTURE_EPN) +
+        '<p>AFFILIATE_DISCLOSURE_TEXT_TRACKED_COLLAPSED (verbatim): <strong>' +
+          escapeHtml(SPEPriceBadge.AFFILIATE_DISCLOSURE_TEXT_TRACKED_COLLAPSED) +
+          '</strong></p>'
+      );
+      lines.push(
+        '<p>AFFILIATE_DISCLOSURE_TEXT_TRACKED_PANEL (verbatim): <strong>' +
+          escapeHtml(SPEPriceBadge.AFFILIATE_DISCLOSURE_TEXT_TRACKED_PANEL) +
           '</strong></p>'
       );
     }

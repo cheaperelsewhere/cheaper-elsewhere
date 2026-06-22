@@ -17,6 +17,7 @@ const {
   buildSavingsText,
   mountPriceBadge,
 } = require('../src/shopify/price-badge.js');
+const { findCheaperListing } = require('../src/shopify/match-confidence.js');
 
 // --- buildSavingsText ---
 // Unit A7: buildSavingsText now takes the full listing (price + landedCost),
@@ -200,6 +201,63 @@ test('mountPriceBadge: dismiss button removes the host from the document', () =>
   dismiss.dispatchEvent(new document.defaultView.MouseEvent('click', { bubbles: true }));
 
   assert.equal(document.getElementById('shopper-protection-ebay-badge'), null);
+});
+
+// --- A11 audit follow-up: prove affiliateTracked survives the real chain,
+// not just a hand-built listing object. findCheaperListing's withLandedCost
+// does a generic shallow copy (no per-field allowlist) specifically so a
+// worker-added field like affiliateTracked is never silently dropped if
+// match-confidence.js is refactored later - this is the regression that
+// generic copy is there to prevent.
+
+test('end-to-end: a worker-shaped tracked listing keeps affiliateTracked through findCheaperListing and reaches the badge as the tracked state', () => {
+  freshDom();
+  const product = { hasStrongIdentifier: true, selectedVariant: { price: { amount: 50, currency: 'GBP' } } };
+  const lookupResult = {
+    abstained: false,
+    listings: [
+      {
+        url: 'https://www.ebay.com/itm/1?campid=affiliate123',
+        price: { amount: 40, currency: 'GBP' },
+        shippingCost: { amount: 0, currency: 'GBP' },
+        affiliateTracked: true,
+      },
+    ],
+  };
+
+  const decision = findCheaperListing(product, lookupResult);
+  assert.ok(decision, 'a qualifying cheaper listing should be found');
+  assert.equal(decision.affiliateTracked, true, 'affiliateTracked must survive the shallow copy into landedCost');
+
+  mountPriceBadge(decision, product.selectedVariant.price);
+  const host = document.getElementById('shopper-protection-ebay-badge');
+  const adTag = host.shadowRoot.querySelector('.ad-tag');
+  assert.equal(adTag.textContent, 'Ad', 'tracked state must reach the badge through the real decision chain, not only a hand-built listing');
+});
+
+test('end-to-end: a worker-shaped untracked listing keeps affiliateTracked:false through findCheaperListing and reaches the badge as the untracked state', () => {
+  freshDom();
+  const product = { hasStrongIdentifier: true, selectedVariant: { price: { amount: 50, currency: 'GBP' } } };
+  const lookupResult = {
+    abstained: false,
+    listings: [
+      {
+        url: 'https://www.ebay.com/itm/1',
+        price: { amount: 40, currency: 'GBP' },
+        shippingCost: { amount: 0, currency: 'GBP' },
+        affiliateTracked: false,
+      },
+    ],
+  };
+
+  const decision = findCheaperListing(product, lookupResult);
+  assert.ok(decision, 'a qualifying cheaper listing should be found');
+  assert.equal(decision.affiliateTracked, false);
+
+  mountPriceBadge(decision, product.selectedVariant.price);
+  const host = document.getElementById('shopper-protection-ebay-badge');
+  const adTag = host.shadowRoot.querySelector('.ad-tag');
+  assert.equal(adTag, null, 'untracked state must reach the badge through the real decision chain, not only a hand-built listing');
 });
 
 test('mountPriceBadge: a second mount call is idempotent, returning the existing API instead of stacking a duplicate', () => {

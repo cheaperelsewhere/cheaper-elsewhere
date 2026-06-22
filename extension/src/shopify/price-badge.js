@@ -21,19 +21,20 @@
 
 // Untracked state: there is no ad, no affiliate link, no money - so no "Ad"
 // label and no future/conditional commission language ("may earn" etc).
-var AFFILIATE_DISCLOSURE_TEXT_UNTRACKED =
-  'This extension links to eBay listings. We are not paid for this link.';
+var AFFILIATE_DISCLOSURE_TEXT_UNTRACKED = "We're not paid for this link.";
 
 // Tracked state, collapsed line: must be definite, present-tense, and live
 // alongside the always-visible "Ad" tag in the collapsed badge (not only in
 // the expandable panel) - the ASA treats "may earn" as misleading where a
 // commission is always earned once tracking exists.
-var AFFILIATE_DISCLOSURE_TEXT_TRACKED_COLLAPSED = 'We earn a commission if you buy through this link.';
+var AFFILIATE_DISCLOSURE_TEXT_TRACKED_COLLAPSED = 'We earn a commission if you buy through this.';
 
 // Tracked state, panel line: the deeper "why am I seeing this?" reassurance,
 // shown only once expanded.
 var AFFILIATE_DISCLOSURE_TEXT_TRACKED_PANEL =
-  'This extension earns a commission from eBay purchases made through this link, at no extra cost to you.';
+  'This is a paid link. We earn a commission from eBay if you buy through it, at no extra cost to ' +
+  'you. We only show it when an eBay listing is genuinely cheaper for the same item, based on the ' +
+  "total price including delivery. No account, and we don't track you.";
 
 var BADGE_CSS =
   ':host { all: initial; }' +
