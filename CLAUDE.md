@@ -23,8 +23,9 @@ Project layout:
 ```
 extension/   Manifest V3 extension: Shopify product extraction + live-page adapter (current focus),
              plus the parked dark-pattern detectors
-worker/      Cloudflare Worker proxy to the eBay Browse API (lookup built; not deployed or wired up
-             to the extension yet — A-series)
+worker/      Cloudflare Worker proxy to the eBay Browse API (deployed at
+             shopper-protection-ebay-worker.dwelluma.workers.dev and wired up since A4; runs against
+             eBay's sandbox catalog, not production — no EBAY_CAMPAIGN_ID, no EPN enrollment)
 scripts/     Dev-only verification tools that load the real unpacked extension in headless Chromium
 docs/        Append-only gate/audit reports for the (parked) detector-signal build (see "Gate
              before you build") — the newer A-series Shopify work doesn't use this convention

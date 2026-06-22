@@ -2,7 +2,7 @@
   "name": "shopper-protection-extension",
   "version": "0.1.0",
   "private": true,
-  "description": "Browser extension that detects manipulative e-commerce tactics client-side.",
+  "description": "Browser extension that finds genuinely cheaper prices for Shopify products via the eBay Browse API. No account, no tracking.",
   "scripts": {
     "test": "node --test extension/tests/*.test.js ; node --test worker/tests/*.test.js",
     "verify:extension": "node scripts/verify-extension.js",

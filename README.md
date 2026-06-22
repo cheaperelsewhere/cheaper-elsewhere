@@ -22,11 +22,23 @@ Build is numbered "A1, A2, ..." (A-series). Units complete so far:
 - [x] A3 - eBay Browse API lookup via a Cloudflare Worker (`worker/`): takes a minimal
       `{ gtin, title, currency }` query, builds an eBay Browse API search (GTIN exact-match
       preferred over keyword search), authenticates via OAuth2 client-credentials, and returns
-      normalized candidate listings or abstains. Local-only so far (`wrangler dev`) - not deployed,
-      and unexercised against the real eBay API since there's no eBay developer account/credentials
-      yet. Not yet wired up to the extension.
-- [ ] A4+ - match-confidence logic, suggestion UI + affiliate disclosure (gated on a deliberate user
-      action, not just page load), wiring the extension to call the Worker
+      normalized candidate listings or abstains.
+- [x] A4 - wired `page-adapter.js` to the deployed Worker
+      (`shopper-protection-ebay-worker.dwelluma.workers.dev`, declared in `host_permissions`).
+- [x] A5 - match-confidence decision logic (compares landed cost, decides when a result counts as
+      genuinely cheaper).
+- [x] A6 - "cheaper elsewhere" suggestion badge UI (`price-badge.js`), shadow-DOM isolated.
+- [x] A7 - badge compares landed cost (item + shipping), not item price alone.
+- [x] A8 - EPN-review readiness pass: always-visible "Ad" tag on the collapsed badge, widened
+      live-store verification matrix, permission audit (no manifest changes needed).
+- [x] A9 - single-purpose manifest alignment: rewrote the manifest description, removed the
+      detector content-script registration so the shipped extension has one truthful purpose.
+
+The Worker is deployed and live, but configured against eBay's **sandbox** catalog
+(`EBAY_API_BASE_URL = https://api.sandbox.ebay.com`), not production, and `EBAY_CAMPAIGN_ID` is
+unset - so any listing shown links with no real affiliate tracking and matches come from eBay's test
+inventory, not real-world listings. See `docs/A10-submission-readiness.md` for the full gap
+analysis.
 
 ## Detector build (parked)
 
@@ -58,7 +70,8 @@ anything - see **Dev commands** below.
 ```
 extension/   Manifest V3 browser extension: Shopify product extraction + live-page adapter
              (current focus), plus the parked dark-pattern detectors
-worker/      Cloudflare Worker proxy to the eBay Browse API (lookup built, not deployed/wired up yet)
+worker/      Cloudflare Worker proxy to the eBay Browse API (deployed, wired up to the extension,
+             running against eBay sandbox - not production)
 scripts/     Dev-only verification tools (load the real extension in headless Chromium)
 ```
 

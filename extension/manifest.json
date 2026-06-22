@@ -6,7 +6,7 @@
   "host_permissions": ["https://shopper-protection-ebay-worker.dwelluma.workers.dev/*"],
   "content_scripts": [
     {
-      "matches": ["*://*/*products/*", "*://*/products/*"],
+      "matches": ["*://*/*products/*"],
       "js": [
         "src/shopify/gtin.js",
         "src/shopify/extract-product.js",
