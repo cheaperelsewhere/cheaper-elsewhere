@@ -40,13 +40,19 @@ function normalizeSearchResponse(json) {
           : null;
       // itemAffiliateWebUrl carries EPN tracking when a campaign ID is
       // configured; fall back to the plain itemWebUrl otherwise.
-      var url = (item && (item.itemAffiliateWebUrl || item.itemWebUrl)) || null;
+      // affiliateTracked records, per listing, which of the two was actually
+      // used for `url` - the extension's disclosure copy is keyed off this
+      // field directly rather than a build-time assumption about whether a
+      // campaign ID happens to be configured (A11).
+      var affiliateUrl = item && item.itemAffiliateWebUrl;
+      var url = affiliateUrl || (item && item.itemWebUrl) || null;
 
       return {
         itemId: item.itemId || null,
         title: item.title || null,
         price: price,
         url: url,
+        affiliateTracked: Boolean(affiliateUrl),
         image: (item.image && item.image.imageUrl) || null,
         condition: item.condition || null,
         seller: (item.seller && item.seller.username) || null,

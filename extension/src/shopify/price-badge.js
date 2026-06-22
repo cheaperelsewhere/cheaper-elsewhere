@@ -10,16 +10,30 @@
 // just-unusual host page might otherwise leak into the shadow tree (font,
 // color, line-height, etc.) before this file's own rules apply.
 
-// Parked (kept, not used) until eBay Partner Network production credentials
-// exist - see CLAUDE.md and worker/.dev.vars.example. EBAY_CAMPAIGN_ID is
-// currently unset (confirmed in worker/.dev.vars during this unit's live
-// verification), so links carry no affiliate tracking and no commission is
-// actually earned yet - showing this text now would be a false claim.
-var AFFILIATE_DISCLOSURE_TEXT_FUTURE_EPN =
-  'This extension earns a commission from eBay purchases made through this link, at no extra cost to you.';
+// Unit A11: disclosure is state-driven off each listing's own
+// `affiliateTracked` flag (set by the worker - see worker/src/ebay-response.js),
+// not a build-time constant swapped by hand at EPN-launch time. That hand-swap
+// would create a drift window where a re-released extension and the live
+// worker could disagree about whether commission is earned - exactly the
+// false/under-disclosure this design exists to prevent. With
+// EBAY_CAMPAIGN_ID still unset, every listing's affiliateTracked is false, so
+// the untracked strings below are what a reviewer installing today sees.
 
-// Accurate for the current (sandbox, no EPN enrollment) build stage.
-var AFFILIATE_DISCLOSURE_TEXT = 'This extension links to eBay listings. No affiliate commission is earned at this stage.';
+// Untracked state: there is no ad, no affiliate link, no money - so no "Ad"
+// label and no future/conditional commission language ("may earn" etc).
+var AFFILIATE_DISCLOSURE_TEXT_UNTRACKED =
+  'This extension links to eBay listings. We are not paid for this link.';
+
+// Tracked state, collapsed line: must be definite, present-tense, and live
+// alongside the always-visible "Ad" tag in the collapsed badge (not only in
+// the expandable panel) - the ASA treats "may earn" as misleading where a
+// commission is always earned once tracking exists.
+var AFFILIATE_DISCLOSURE_TEXT_TRACKED_COLLAPSED = 'We earn a commission if you buy through this link.';
+
+// Tracked state, panel line: the deeper "why am I seeing this?" reassurance,
+// shown only once expanded.
+var AFFILIATE_DISCLOSURE_TEXT_TRACKED_PANEL =
+  'This extension earns a commission from eBay purchases made through this link, at no extra cost to you.';
 
 var BADGE_CSS =
   ':host { all: initial; }' +
@@ -35,6 +49,8 @@ var BADGE_CSS =
   '.panel[aria-hidden="true"] { display: none; }' +
   '.panel a { color: #2a52be; }' +
   '.disclosure { color: #666; margin: 8px 0 0; font-size: 11px; }' +
+  '.collapsed-disclosure { display: block; max-width: 260px; color: #fff; opacity: 0.92; font-size: 10px;' +
+  ' line-height: 1.3; margin: 4px 0 0; }' +
   '.dismiss { background: none; border: none; color: #888; cursor: pointer; float: right;' +
   ' font-size: 16px; line-height: 1; padding: 0; margin: 0 0 4px 8px; }';
 
@@ -83,23 +99,42 @@ function mountPriceBadge(cheaperListing, ownPrice) {
   style.textContent = BADGE_CSS;
   shadow.appendChild(style);
 
-  // A8: the full disclosure paragraph below lives inside the collapsible
+  // Unit A11: which of the two states below applies is keyed off this one
+  // listing's own affiliateTracked flag, not a build-time constant - see the
+  // comment above AFFILIATE_DISCLOSURE_TEXT_UNTRACKED.
+  var tracked = Boolean(cheaperListing && cheaperListing.affiliateTracked);
+
+  // A8/A11: the deeper disclosure paragraph lives inside the collapsible
   // panel, hidden until the user clicks the badge - so on its own it doesn't
   // satisfy the compliance floor of disclosing the affiliate relationship
-  // *before* any click. This "Ad" tag sits outside the panel, always visible
-  // alongside the collapsed button.
+  // *before* any click. In the tracked state, the "Ad" tag and the
+  // present-tense commission line both sit outside the panel, always visible
+  // alongside the collapsed button. In the untracked state neither exists:
+  // there is no ad to disclose.
   var wrap = document.createElement('div');
   wrap.className = 'badge-wrap';
-
-  var adTag = document.createElement('span');
-  adTag.className = 'ad-tag';
-  adTag.textContent = 'Ad';
 
   var button = document.createElement('button');
   button.type = 'button';
   button.className = 'badge-button';
   button.setAttribute('aria-expanded', 'false');
   button.textContent = buildSavingsText(ownPrice, cheaperListing) || 'Found cheaper on eBay';
+
+  if (tracked) {
+    var adTag = document.createElement('span');
+    adTag.className = 'ad-tag';
+    adTag.textContent = 'Ad';
+    wrap.appendChild(adTag);
+  }
+
+  wrap.appendChild(button);
+
+  if (tracked) {
+    var collapsedDisclosure = document.createElement('p');
+    collapsedDisclosure.className = 'collapsed-disclosure';
+    collapsedDisclosure.textContent = AFFILIATE_DISCLOSURE_TEXT_TRACKED_COLLAPSED;
+    wrap.appendChild(collapsedDisclosure);
+  }
 
   var panel = document.createElement('div');
   panel.className = 'panel';
@@ -123,7 +158,7 @@ function mountPriceBadge(cheaperListing, ownPrice) {
 
   var disclosure = document.createElement('p');
   disclosure.className = 'disclosure';
-  disclosure.textContent = AFFILIATE_DISCLOSURE_TEXT;
+  disclosure.textContent = tracked ? AFFILIATE_DISCLOSURE_TEXT_TRACKED_PANEL : AFFILIATE_DISCLOSURE_TEXT_UNTRACKED;
 
   panel.appendChild(dismiss);
   panel.appendChild(link);
@@ -134,9 +169,6 @@ function mountPriceBadge(cheaperListing, ownPrice) {
     panel.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
     button.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
   });
-
-  wrap.appendChild(adTag);
-  wrap.appendChild(button);
 
   shadow.appendChild(wrap);
   shadow.appendChild(panel);
@@ -151,8 +183,9 @@ function mountPriceBadge(cheaperListing, ownPrice) {
 }
 
 var SPEPriceBadge = {
-  AFFILIATE_DISCLOSURE_TEXT: AFFILIATE_DISCLOSURE_TEXT,
-  AFFILIATE_DISCLOSURE_TEXT_FUTURE_EPN: AFFILIATE_DISCLOSURE_TEXT_FUTURE_EPN,
+  AFFILIATE_DISCLOSURE_TEXT_UNTRACKED: AFFILIATE_DISCLOSURE_TEXT_UNTRACKED,
+  AFFILIATE_DISCLOSURE_TEXT_TRACKED_COLLAPSED: AFFILIATE_DISCLOSURE_TEXT_TRACKED_COLLAPSED,
+  AFFILIATE_DISCLOSURE_TEXT_TRACKED_PANEL: AFFILIATE_DISCLOSURE_TEXT_TRACKED_PANEL,
   buildSavingsText: buildSavingsText,
   mountPriceBadge: mountPriceBadge,
 };

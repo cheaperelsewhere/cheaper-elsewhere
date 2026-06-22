@@ -74,6 +74,7 @@ test('happy path: fetches a token, searches eBay with the right headers, and ret
 
     assert.equal(listings.length, 1);
     assert.equal(listings[0].itemId, 'v1|110587956912|0');
+    assert.equal(listings[0].affiliateTracked, true);
 
     const searchRequest = requests.find((r) => r.url.includes('/item_summary/search'));
     assert.match(searchRequest.url, /q=Wireless\+Mouse/);

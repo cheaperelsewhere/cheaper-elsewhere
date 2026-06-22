@@ -15,6 +15,7 @@ test('normalizes a complete item and prefers the affiliate URL', () => {
     title: 'Example Wireless Mouse - Black',
     price: { amount: 19.99, currency: 'USD' },
     url: 'https://www.ebay.com/itm/110587956912?campid=affiliate123',
+    affiliateTracked: true,
     image: 'https://i.ebayimg.com/images/g/example/s-l500.jpg',
     condition: 'New',
     seller: 'exampleseller123',
@@ -33,7 +34,35 @@ test('falls back to itemWebUrl when no affiliate URL is present', () => {
       { itemId: 'x', title: 't', price: { value: '5.00', currency: 'USD' }, itemWebUrl: 'https://www.ebay.com/itm/x' },
     ],
   };
-  assert.equal(normalizeSearchResponse(json)[0].url, 'https://www.ebay.com/itm/x');
+  const listing = normalizeSearchResponse(json)[0];
+  assert.equal(listing.url, 'https://www.ebay.com/itm/x');
+  assert.equal(listing.affiliateTracked, false);
+});
+
+// Unit A11: affiliateTracked is per-listing, not derived from whether a
+// campaign ID happens to be configured for the request as a whole - two
+// items in the same response can land on opposite sides of it.
+test('affiliateTracked reflects whether itemAffiliateWebUrl was actually used, per listing', () => {
+  const json = {
+    itemSummaries: [
+      {
+        itemId: 'tracked',
+        title: 't',
+        price: { value: '5.00', currency: 'USD' },
+        itemWebUrl: 'https://www.ebay.com/itm/tracked',
+        itemAffiliateWebUrl: 'https://www.ebay.com/itm/tracked?campid=affiliate123',
+      },
+      {
+        itemId: 'untracked',
+        title: 't',
+        price: { value: '5.00', currency: 'USD' },
+        itemWebUrl: 'https://www.ebay.com/itm/untracked',
+      },
+    ],
+  };
+  const listings = normalizeSearchResponse(json);
+  assert.equal(listings.find((l) => l.itemId === 'tracked').affiliateTracked, true);
+  assert.equal(listings.find((l) => l.itemId === 'untracked').affiliateTracked, false);
 });
 
 test('drops items with a price but no usable url', () => {

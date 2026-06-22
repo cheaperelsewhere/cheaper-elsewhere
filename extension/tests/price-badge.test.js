@@ -10,7 +10,13 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { JSDOM } = require('jsdom');
 
-const { AFFILIATE_DISCLOSURE_TEXT, buildSavingsText, mountPriceBadge } = require('../src/shopify/price-badge.js');
+const {
+  AFFILIATE_DISCLOSURE_TEXT_UNTRACKED,
+  AFFILIATE_DISCLOSURE_TEXT_TRACKED_COLLAPSED,
+  AFFILIATE_DISCLOSURE_TEXT_TRACKED_PANEL,
+  buildSavingsText,
+  mountPriceBadge,
+} = require('../src/shopify/price-badge.js');
 
 // --- buildSavingsText ---
 // Unit A7: buildSavingsText now takes the full listing (price + landedCost),
@@ -70,6 +76,7 @@ test('mountPriceBadge: mounts a shadow-DOM-isolated host with a collapsed badge 
     url: 'https://sandbox.ebay.com/itm/1',
     price: { amount: 11.99, currency: 'USD' },
     landedCost: { amount: 11.99, currency: 'USD' },
+    affiliateTracked: false,
   };
   mountPriceBadge(listing, { amount: 50, currency: 'USD' });
 
@@ -89,6 +96,7 @@ test('mountPriceBadge: clicking the badge toggles the panel open and closed', ()
     url: 'https://sandbox.ebay.com/itm/1',
     price: { amount: 11.99, currency: 'USD' },
     landedCost: { amount: 11.99, currency: 'USD' },
+    affiliateTracked: false,
   };
   mountPriceBadge(listing, { amount: 50, currency: 'USD' });
 
@@ -105,41 +113,76 @@ test('mountPriceBadge: clicking the badge toggles the panel open and closed', ()
   assert.equal(button.getAttribute('aria-expanded'), 'false');
 });
 
-test('mountPriceBadge: an "Ad" tag is always visible alongside the collapsed button, not hidden inside the panel', () => {
+// --- Unit A11: state-driven disclosure, keyed off the listing's own affiliateTracked ---
+
+test('mountPriceBadge: untracked listing shows no "Ad" tag, no collapsed commission line, and a plain not-paid disclosure', () => {
   freshDom();
   const listing = {
     url: 'https://sandbox.ebay.com/itm/1',
     price: { amount: 11.99, currency: 'USD' },
     landedCost: { amount: 11.99, currency: 'USD' },
+    affiliateTracked: false,
   };
   mountPriceBadge(listing, { amount: 50, currency: 'USD' });
 
   const host = document.getElementById('shopper-protection-ebay-badge');
   const adTag = host.shadowRoot.querySelector('.ad-tag');
-  const panel = host.shadowRoot.querySelector('.panel');
+  const collapsedDisclosure = host.shadowRoot.querySelector('.collapsed-disclosure');
+  const panelDisclosure = host.shadowRoot.querySelector('.disclosure');
 
-  assert.equal(adTag.textContent, 'Ad');
-  assert.ok(!panel.contains(adTag), 'the Ad tag must live outside the collapsible panel');
-  assert.equal(panel.getAttribute('aria-hidden'), 'true', "panel starts hidden, but the Ad tag isn't inside it");
+  assert.equal(adTag, null, 'no "Ad" tag when the returned link carries no affiliate tracking');
+  assert.equal(collapsedDisclosure, null, 'no collapsed commission line when untracked');
+  assert.equal(panelDisclosure.textContent, AFFILIATE_DISCLOSURE_TEXT_UNTRACKED);
+  assert.doesNotMatch(panelDisclosure.textContent, /\bmay earn\b/i);
 });
 
-test('mountPriceBadge: panel contains the eBay link and the exact affiliate disclosure text', () => {
+test('mountPriceBadge: tracked listing shows an always-visible "Ad" tag and a present-tense commission line in the collapsed state', () => {
   freshDom();
   const listing = {
     url: 'https://sandbox.ebay.com/itm/1',
     price: { amount: 11.99, currency: 'USD' },
     landedCost: { amount: 11.99, currency: 'USD' },
+    affiliateTracked: true,
+  };
+  mountPriceBadge(listing, { amount: 50, currency: 'USD' });
+
+  const host = document.getElementById('shopper-protection-ebay-badge');
+  const adTag = host.shadowRoot.querySelector('.ad-tag');
+  const collapsedDisclosure = host.shadowRoot.querySelector('.collapsed-disclosure');
+  const panel = host.shadowRoot.querySelector('.panel');
+  const panelDisclosure = host.shadowRoot.querySelector('.disclosure');
+
+  assert.equal(adTag.textContent, 'Ad');
+  assert.ok(!panel.contains(adTag), 'the Ad tag must live outside the collapsible panel');
+
+  assert.equal(collapsedDisclosure.textContent, AFFILIATE_DISCLOSURE_TEXT_TRACKED_COLLAPSED);
+  assert.ok(
+    !panel.contains(collapsedDisclosure),
+    'the present-tense commission line must be visible in the collapsed state, not only inside the panel'
+  );
+  assert.match(collapsedDisclosure.textContent, /\bwe earn\b/i);
+  assert.doesNotMatch(collapsedDisclosure.textContent, /\bmay earn\b/i);
+
+  assert.equal(panel.getAttribute('aria-hidden'), 'true', "panel starts hidden, but the Ad tag and commission line aren't inside it");
+  assert.equal(panelDisclosure.textContent, AFFILIATE_DISCLOSURE_TEXT_TRACKED_PANEL);
+});
+
+test('mountPriceBadge: panel contains the eBay link with safe target/rel attributes, in both states', () => {
+  freshDom();
+  const listing = {
+    url: 'https://sandbox.ebay.com/itm/1',
+    price: { amount: 11.99, currency: 'USD' },
+    landedCost: { amount: 11.99, currency: 'USD' },
+    affiliateTracked: false,
   };
   mountPriceBadge(listing, { amount: 50, currency: 'USD' });
 
   const host = document.getElementById('shopper-protection-ebay-badge');
   const link = host.shadowRoot.querySelector('a');
-  const disclosure = host.shadowRoot.querySelector('.disclosure');
 
   assert.equal(link.href, 'https://sandbox.ebay.com/itm/1');
   assert.equal(link.target, '_blank');
   assert.equal(link.rel, 'noopener noreferrer');
-  assert.equal(disclosure.textContent, AFFILIATE_DISCLOSURE_TEXT);
 });
 
 test('mountPriceBadge: dismiss button removes the host from the document', () => {
@@ -148,6 +191,7 @@ test('mountPriceBadge: dismiss button removes the host from the document', () =>
     url: 'https://sandbox.ebay.com/itm/1',
     price: { amount: 11.99, currency: 'USD' },
     landedCost: { amount: 11.99, currency: 'USD' },
+    affiliateTracked: false,
   };
   mountPriceBadge(listing, { amount: 50, currency: 'USD' });
 
@@ -164,6 +208,7 @@ test('mountPriceBadge: a second mount call is idempotent, returning the existing
     url: 'https://sandbox.ebay.com/itm/1',
     price: { amount: 11.99, currency: 'USD' },
     landedCost: { amount: 11.99, currency: 'USD' },
+    affiliateTracked: false,
   };
   const first = mountPriceBadge(listing, { amount: 50, currency: 'USD' });
   const second = mountPriceBadge(listing, { amount: 50, currency: 'USD' });
