@@ -2,27 +2,9 @@
   "manifest_version": 3,
   "name": "Shopper Protection",
   "version": "0.1.0",
-  "description": "Flags manipulative shopping-page tactics in real time and explains what it found. No account, no tracking.",
+  "description": "Checks the Shopify product page you're viewing against eBay listings and shows a badge when a genuinely cheaper price exists. No account, no tracking.",
   "host_permissions": ["https://shopper-protection-ebay-worker.dwelluma.workers.dev/*"],
   "content_scripts": [
-    {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": [
-        "src/detectors/utils.js",
-        "src/detectors/countdown-timer.js",
-        "src/detectors/scarcity.js",
-        "src/detectors/social-proof.js",
-        "src/detectors/discount-display.js",
-        "src/detectors/confirmshaming.js",
-        "src/detectors/preselected-addons.js",
-        "src/detectors/preselected-consent.js",
-        "src/detectors/recurring-charge.js",
-        "src/detectors/index.js",
-        "src/content/indicator.js",
-        "src/content/content-script.js"
-      ],
-      "run_at": "document_idle"
-    },
     {
       "matches": ["*://*/*products/*", "*://*/products/*"],
       "js": [

@@ -202,3 +202,12 @@ checks run against live Shopify stores (cribofart.com, allbirds.com), not local 
 can drift if a merchant changes stock/handles — dev-only, not CI-gating. It also reads its result
 off `console.log` (not `console.debug`, which the detector pipeline uses), since the adapter logs
 through a different code path.
+
+**`verify:detectors` and `verify:extension` are shelved as of A9.** `manifest.json` now registers
+only the Shopify price-comparison content script — the detector content-script entry (which loaded
+`src/detectors/*.js`, `src/content/indicator.js`, `src/content/content-script.js`) was removed so
+the shipped extension presents a single, truthful purpose. Both scripts depend on that entry being
+registered (`verify:detectors` exercises the detector signals it injected; `verify:extension` checks
+the indicator badge that `indicator.js` injected), so neither currently exercises anything against
+the real unpacked extension. The detector source itself is untouched and still covered by `npm
+test`. Re-registering that `content_scripts` entry would be needed to run either script again.

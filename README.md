@@ -39,6 +39,12 @@ extended:
 - [ ] Step 4 - Cloudflare Worker against eBay sandbox
 - [ ] Step 5 - suggestion UI wired to the Worker + disclosure
 
+As of A9, the detector content script is no longer registered in `manifest.json` (the shipped
+extension presents a single, truthful purpose: price comparison). The detector source under
+`extension/src/detectors/` is untouched and still unit-tested, but `npm run verify:detectors`
+(which loads the real unpacked extension and depends on that registration) no longer exercises
+anything - see **Dev commands** below.
+
 ## Load the extension (unpacked)
 
 1. Open `chrome://extensions`.
@@ -60,8 +66,13 @@ scripts/     Dev-only verification tools (load the real extension in headless Ch
 
 ```
 npm test                  # unit tests for pure logic (extractProduct, page-adapter helpers, parked detectors, etc.)
-npm run verify:extension  # loads the real extension, checks indicator + shadow-DOM isolation (parked detector UI)
-npm run verify:detectors  # loads the real extension against fixture pages, checks all 6 parked signals fire correctly
+npm run verify:extension  # SHELVED since A9, same reason as verify:detectors below: the indicator
+                          #   badge it checks (parked detector UI) is injected only by the
+                          #   now-unregistered detector content script.
+npm run verify:detectors  # SHELVED since A9: the detector content script it depends on is no
+                          #   longer registered in manifest.json, so this no longer injects
+                          #   anything. Re-registering that content_scripts entry would be needed
+                          #   to run it again.
 npm run verify:adapter    # loads the real extension against live Shopify stores, checks the price-comparison adapter
 ```
 
