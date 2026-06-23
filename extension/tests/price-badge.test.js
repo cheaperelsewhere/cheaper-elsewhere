@@ -3,8 +3,7 @@
 // formatting, tested directly. mountPriceBadge is DOM construction - jsdom
 // can exercise its structure/behavior (elements, click toggling, dismiss),
 // but real shadow-DOM CSS isolation against a hostile page stylesheet is
-// only meaningfully verified live, via Playwright (see scripts/), the same
-// split already used for content/indicator.js.
+// only meaningfully verified live, via Playwright (see scripts/).
 
 const test = require('node:test');
 const assert = require('node:assert/strict');

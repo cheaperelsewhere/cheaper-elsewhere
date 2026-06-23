@@ -1,12 +1,8 @@
 // The actual visible UI for the price-comparison feature: a small,
 // dismissible, shadow-DOM-isolated badge shown only when match-confidence.js
-// found a genuinely cheaper, confidently-matched eBay listing. Decoupled
-// from the (parked) dark-pattern detector's own indicator badge - separate
-// host element, separate file, mounted in the opposite corner so the two
-// features can never visually collide if both ever run on the same page.
+// found a genuinely cheaper, confidently-matched eBay listing.
 //
-// `:host { all: initial; }` is the same CSS-isolation technique used by
-// content/indicator.js: it resets every inherited CSS property a hostile or
+// `:host { all: initial; }` resets every inherited CSS property a hostile or
 // just-unusual host page might otherwise leak into the shadow tree (font,
 // color, line-height, etc.) before this file's own rules apply.
 
@@ -80,8 +76,7 @@ function buildSavingsText(ownPrice, listing) {
   );
 }
 
-// Idempotent like indicator.js's mountIndicator - a second call (e.g. if the
-// settle pass somehow re-ran) returns the already-mounted API rather than
+// Idempotent - a second call returns the already-mounted API rather than
 // stacking a duplicate badge.
 function mountPriceBadge(cheaperListing, ownPrice) {
   var existing = document.getElementById('shopper-protection-ebay-badge');

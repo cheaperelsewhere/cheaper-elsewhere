@@ -16,10 +16,9 @@ const EXT_PATH = path.resolve(__dirname, '..', 'extension');
 const PROFILE_DIR = path.join(os.tmpdir(), 'spe-verify-adapter-profile');
 
 // page-adapter.js logs '[Shopper Protection] adapter normalized product' (with
-// a structured arg) or '[Shopper Protection] adapter abstained' on load - mirror
-// of how verify-detectors.js reads detector output straight off a console
-// message's live remote-object handle, since the isolated content-script
-// world isn't reachable via page.evaluate().
+// a structured arg) or '[Shopper Protection] adapter abstained' on load - read
+// straight off a console message's live remote-object handle, since the
+// isolated content-script world isn't reachable via page.evaluate().
 function waitForAdapterResult(page, timeoutMs) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -49,9 +48,16 @@ async function checkPage(context, label, url) {
   const pageErrors = [];
   page.on('pageerror', (err) => pageErrors.push(String(err)));
 
-  const resultPromise = waitForAdapterResult(page, 15000);
-  await page.goto(url, { waitUntil: 'load', timeout: 30000 });
-  const result = await resultPromise.catch((err) => ({ error: String(err) }));
+  // Both .catch() calls must be chained here, synchronously, before either
+  // promise is awaited - if either rejects (e.g. the 15s adapter timeout
+  // firing before the up-to-30s page.goto resolves, as happens on a slow or
+  // geo-redirecting store) while still unhandled, Node treats it as an
+  // unhandled rejection and kills the whole process instead of failing just
+  // this one check.
+  const resultPromise = waitForAdapterResult(page, 15000).catch((err) => ({ error: String(err) }));
+  const gotoPromise = page.goto(url, { waitUntil: 'load', timeout: 30000 }).catch((err) => ({ error: String(err) }));
+  const [adapterResult, gotoOutcome] = await Promise.all([resultPromise, gotoPromise]);
+  const result = gotoOutcome && gotoOutcome.error ? gotoOutcome : adapterResult;
   await page.close();
   return { label: label, url: url, result: result, pageErrors: pageErrors };
 }

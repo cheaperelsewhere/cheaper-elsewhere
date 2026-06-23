@@ -7,8 +7,7 @@ suggestion only when one honestly exists. Funded by eBay affiliate commission on
 
 An earlier build of this extension instead detected manipulative e-commerce dark patterns
 client-side, funded by *decoupled* eBay "similar item" suggestions (the suggestion never depended
-on what the detector found). That work is parked, not deleted - see **Detector build (parked)**
-below.
+on what the detector found). That subsystem was deleted in Unit A12, confirmed not used for launch.
 
 ## Status - price comparison (current focus)
 
@@ -40,23 +39,6 @@ unset - so any listing shown links with no real affiliate tracking and matches c
 inventory, not real-world listings. See `docs/A10-submission-readiness.md` for the full gap
 analysis.
 
-## Detector build (parked)
-
-Steps 1-2 of an earlier 5-step plan are complete and still pass their tests, but are not being
-extended:
-
-- [x] Step 1 - extension skeleton (loads, injects an indicator shell, no detection logic)
-- [x] Step 2 - detection core (6 DOM signals, pure functions, unit + real-browser tested)
-- [ ] Step 3 - three-state UI + expandable report
-- [ ] Step 4 - Cloudflare Worker against eBay sandbox
-- [ ] Step 5 - suggestion UI wired to the Worker + disclosure
-
-As of A9, the detector content script is no longer registered in `manifest.json` (the shipped
-extension presents a single, truthful purpose: price comparison). The detector source under
-`extension/src/detectors/` is untouched and still unit-tested, but `npm run verify:detectors`
-(which loads the real unpacked extension and depends on that registration) no longer exercises
-anything - see **Dev commands** below.
-
 ## Load the extension (unpacked)
 
 1. Open `chrome://extensions`.
@@ -69,7 +51,6 @@ anything - see **Dev commands** below.
 
 ```
 extension/   Manifest V3 browser extension: Shopify product extraction + live-page adapter
-             (current focus), plus the parked dark-pattern detectors
 worker/      Cloudflare Worker proxy to the eBay Browse API (deployed, wired up to the extension,
              running against eBay sandbox - not production)
 scripts/     Dev-only verification tools (load the real extension in headless Chromium)
@@ -78,14 +59,7 @@ scripts/     Dev-only verification tools (load the real extension in headless Ch
 ## Dev commands
 
 ```
-npm test                  # unit tests for pure logic (extractProduct, page-adapter helpers, parked detectors, etc.)
-npm run verify:extension  # SHELVED since A9, same reason as verify:detectors below: the indicator
-                          #   badge it checks (parked detector UI) is injected only by the
-                          #   now-unregistered detector content script.
-npm run verify:detectors  # SHELVED since A9: the detector content script it depends on is no
-                          #   longer registered in manifest.json, so this no longer injects
-                          #   anything. Re-registering that content_scripts entry would be needed
-                          #   to run it again.
+npm test                  # unit tests for pure logic (extractProduct, page-adapter helpers, etc.)
 npm run verify:adapter    # loads the real extension against live Shopify stores, checks the price-comparison adapter
 ```
 

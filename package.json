@@ -5,8 +5,6 @@
   "description": "Browser extension that finds genuinely cheaper prices for Shopify products via the eBay Browse API. No account, no tracking.",
   "scripts": {
     "test": "node --test extension/tests/*.test.js ; node --test worker/tests/*.test.js",
-    "verify:extension": "node scripts/verify-extension.js",
-    "verify:detectors": "node scripts/verify-detectors.js",
     "verify:adapter": "node scripts/verify-adapter.js"
   },
   "devDependencies": {
