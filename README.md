@@ -1,4 +1,4 @@
-# Shopper Protection
+# Cheaper Elsewhere
 
 Browser extension that helps shoppers on Shopify product pages find a genuinely cheaper price for
 what they're looking at, via the eBay Browse API - no account, no tracking. On a product page, it

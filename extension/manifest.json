@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Shopper Protection",
+  "name": "Cheaper Elsewhere",
   "version": "0.1.0",
   "description": "Checks the Shopify product page you're viewing against eBay listings and shows a badge when a genuinely cheaper price exists. No account, no tracking.",
   "icons": {

@@ -1,4 +1,4 @@
-# Chrome Web Store listing copy — Shopper Protection
+# Chrome Web Store listing copy — Cheaper Elsewhere
 
 Drafted ahead of submission. **This copy describes the intended production experience** (the
 extension comparing against eBay's real listing catalog) — see the caveat at the bottom before
@@ -15,7 +15,7 @@ Finds a genuinely cheaper price on eBay for the Shopify product you're viewing. 
 ## Detailed description (shown on the listing page)
 
 ```
-Shopper Protection checks the Shopify product page you're looking at against eBay listings, and
+Cheaper Elsewhere checks the Shopify product page you're looking at against eBay listings, and
 shows you a badge only when a genuinely cheaper price actually exists — including shipping, not
 just the item price.
 

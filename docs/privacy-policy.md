@@ -1,14 +1,14 @@
-# Privacy Policy — Shopper Protection
+# Privacy Policy — Cheaper Elsewhere
 
 **Last updated:** 2026-06-23
 
-Shopper Protection is a browser extension that helps you find a genuinely cheaper price for the
+Cheaper Elsewhere is a browser extension that helps you find a genuinely cheaper price for the
 product you're looking at on a Shopify store, by checking it against eBay listings. This policy
 explains what data the extension processes and what it doesn't.
 
 ## No accounts, no tracking
 
-Shopper Protection has no user accounts, sets no cookies of its own, and stores nothing
+Cheaper Elsewhere has no user accounts, sets no cookies of its own, and stores nothing
 persistently on your device. It does not track you across sites or build a profile of your
 browsing.
 
