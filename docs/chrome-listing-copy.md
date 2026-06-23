@@ -4,7 +4,7 @@ Two versions in this doc, for two different stages — use the right one, don't 
 
 1. **Sandbox-stage copy** (below, "USE NOW") — honest about today's build, for the **Unlisted**
    listing needed so eBay's EPN Operation Support Team has a real install link to test within
-   their ~1 week window (see `docs/A14-epn-chrome-policy-research.md`).
+   their ~1 week window.
 2. **Production copy** (further down, "FUTURE — DO NOT USE YET") — describes the intended
    real-catalog experience, for once the sandbox/production gap actually closes.
 
@@ -74,10 +74,9 @@ listings — no browsing history, no personal data, no other site access is requ
 
 This version describes price comparisons against eBay's **real, production** listing catalog —
 written for once `EBAY_CAMPAIGN_ID` is set and `worker/wrangler.toml`'s `EBAY_API_BASE_URL` points
-at `api.ebay.com` instead of sandbox (see `docs/A10-submission-readiness.md`). Publishing this
-version today would describe a capability the build doesn't have yet for a real shopper — switch
-the live Chrome listing to this copy only once that's actually true, then update the listing from
-Unlisted to Public at the same time.
+at `api.ebay.com` instead of sandbox. Publishing this version today would describe a capability the
+build doesn't have yet for a real shopper — switch the live Chrome listing to this copy only once
+that's actually true, then update the listing from Unlisted to Public at the same time.
 
 ### Short description (≤132 characters)
 
@@ -119,7 +118,7 @@ https://cheaperelsewhere.github.io/cheaper-elsewhere/
 
 ## Why the affiliate paragraph is here, not optional
 
-Confirmed via Chrome's official Affiliate Ads policy (see `docs/A14-epn-chrome-policy-research.md`):
+Confirmed via Chrome's official Affiliate Ads policy:
 "Any affiliate program must be described prominently in the product's Chrome Web Store page, user
 interface, and before installation." Whichever version is live, the disclosure isn't optional
 flavor copy — the listing page itself is one of the three places Chrome's policy requires it,
