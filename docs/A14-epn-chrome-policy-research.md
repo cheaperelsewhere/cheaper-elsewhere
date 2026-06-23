@@ -96,6 +96,33 @@ This doesn't change anything about the A10 finding that the build can't yet demo
 working affiliate flow — it explains *why* that gap can't be worked around with more code, and
 narrows "what's next" to a specific external action rather than an open-ended list.
 
+## Addendum — how to actually apply, and the domain question (2026-06-23, same session)
+
+Direct `WebFetch` of `partnernetwork.ebay.com`'s own pages failed repeatedly (timeouts, and one
+fetch that returned only a client-side-rendering loading shell with no content) - it's a JS-heavy
+SPA the fetch tool can't render. The findings below are corroborated across multiple independent
+secondary sources via search rather than a single verbatim primary-source quote - flagged as
+slightly less certain than the rest of this document for that reason.
+
+**Two separate gates, not one:**
+1. A basic EPN account ("Sign Up" at partnernetwork.ebay.com, sign in with an eBay account, fill in
+   personal/company/promotional info) - free, fast, near-immediate approval for the *general*
+   affiliate program.
+2. Separately, **a browser extension specifically cannot promote eBay just by having a basic EPN
+   account.** Since an April 2023 policy update ("Browser extension policy update"), eBay moved
+   browser extensions onto "an application-based system" - this is the same "Software:
+   Applications and Downloadable Tools" approval track already covered above, with its own
+   Operation Support Team testing requirement. The exact live form fields couldn't be confirmed
+   (page wouldn't render for fetching) - go to partnernetwork.ebay.com directly to find the actual
+   application/questionnaire.
+
+**Domain requirement:** no evidence found that a *purchased custom domain* is required. eBay's own
+wording (per secondary sources) is vague - "an online resource with no illegal, restricted, or
+adult content" - which could be a website, blog, or social presence, not necessarily a domain you
+own. Practical note: Chrome Web Store submission already needs a *hosted* privacy policy URL
+(`docs/privacy-policy.md` has the content but isn't hosted anywhere yet) - a free static host like
+GitHub Pages solves both needs with one stable URL, with no domain purchase required.
+
 ## Sources
 
 - [Software Applications and Downloadable Tools | eBay Partner Network](https://partnernetwork.ebay.com/page/software-applications-and-downloadable-tools)
@@ -104,3 +131,6 @@ narrows "what's next" to a specific external action rather than an open-ended li
 - [Affiliate Ads FAQ | Chrome Web Store - Program Policies | Chrome for Developers](https://developer.chrome.com/docs/webstore/program-policies/affiliate-ads-faq)
 - [Chrome Web Store policy updates: Strengthening our policies on affiliate programs in Chrome Extensions](https://developer.chrome.com/blog/cws-policy-update-affiliate-ads-2025)
 - [How to register for EPN without an app developed - eBay Developer Forums](https://forums.developer.ebay.com/questions/35753/how-to-register-for-epn-without-an-app-developed.html)
+- [Browser extension policy update | eBay Partner Network](https://partnernetwork.ebay.com/page/browser-extension-policy-update)
+- [How to Join the eBay Partner Network in 5 Easy Steps | eBay Partner Network](https://partnernetwork.ebay.com/resources/how-to-join-the-ebay-partner-network-in-5-easy-steps)
+- [How to Make Money with the eBay Partner Network in 2026 | Partnerkin](https://partnerkin.com/en/blog/articles/make_money_with_ebay_network)
