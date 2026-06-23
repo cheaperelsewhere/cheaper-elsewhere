@@ -3,6 +3,11 @@
   "name": "Shopper Protection",
   "version": "0.1.0",
   "description": "Checks the Shopify product page you're viewing against eBay listings and shows a badge when a genuinely cheaper price exists. No account, no tracking.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "host_permissions": ["https://shopper-protection-ebay-worker.dwelluma.workers.dev/*"],
   "content_scripts": [
     {
