@@ -44,10 +44,12 @@ this extension's code adds, configures, or has access to.
 ## eBay affiliate links
 
 Listings shown may link to eBay through an affiliate program. Where a listing's link is
-affiliate-tracked, the badge discloses that and states that we may earn a commission from a
-resulting purchase, at no extra cost to you. Where a listing's link is not affiliate-tracked, the
-badge says so explicitly. Either way, whether a listing is shown is never influenced by whether it
-happens to be affiliate-tracked — the same "genuinely cheaper" criteria apply regardless.
+affiliate-tracked, the badge discloses that with a visible "Ad" tag and states plainly that we earn
+a commission if you buy through that link, at no extra cost to you — never a hedged "may earn,"
+since a real commission is always earned once a listing is affiliate-tracked. Where a listing's
+link is not affiliate-tracked, the badge says so explicitly instead. Either way, whether a listing
+is shown is never influenced by whether it happens to be affiliate-tracked — the same "genuinely
+cheaper" criteria apply regardless.
 
 ## Permissions
 
@@ -62,4 +64,4 @@ If what the extension processes or how it's handled changes, this page will be u
 
 ## Contact
 
-Questions about this policy: **[contact email — fill in before publishing]**
+Questions about this policy: **dev@dwelluma.com**
