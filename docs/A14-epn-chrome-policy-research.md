@@ -123,6 +123,29 @@ own. Practical note: Chrome Web Store submission already needs a *hosted* privac
 (`docs/privacy-policy.md` has the content but isn't hosted anywhere yet) - a free static host like
 GitHub Pages solves both needs with one stable URL, with no domain purchase required.
 
+## Addendum 2 — official Getting Started checklist (2026-06-23, same session)
+
+Found eBay's own "Welcome to eBay Partner Network: A Checklist to Help You Start Earning" PDF -
+unlike the rest of partnernetwork.ebay.com, this is a static file, not a JS-rendered SPA, so it
+fetched cleanly and is quoted with higher confidence than the rest of this document.
+
+**Confirmed exact sequence:**
+1. "To join the eBay Partner Network, create a partner account using your name and email address.
+   **If you have a personal eBay account, please ensure you use a different email address for your
+   partner account.**" - a real gotcha not found anywhere else: the EPN partner-account email
+   should be distinct from any personal/developer eBay account email already in use.
+2. Create Campaign IDs (post-approval) - this is literally where `EBAY_CAMPAIGN_ID` (currently
+   blank in `worker/.dev.vars.example` and the deployed Worker) comes from.
+3. Build trackable links - not directly relevant to this project; the Worker generates
+   affiliate-tracked URLs automatically via the Browse API once a campaign ID exists, no manual
+   link-building tool needed.
+4. "Some promotion methods require advance approval, which you can request by **selecting your
+   promotion method**, and completing the application." - confirms the two-gate structure already
+   documented above: basic account first, then a separate "select promotion method -> Applications
+   and Downloadable Tools -> complete that application" step inside the dashboard.
+
+Support contact, if anything in the application stalls or confuses: **askEPN@ebay.com**.
+
 ## Sources
 
 - [Software Applications and Downloadable Tools | eBay Partner Network](https://partnernetwork.ebay.com/page/software-applications-and-downloadable-tools)
@@ -134,3 +157,4 @@ GitHub Pages solves both needs with one stable URL, with no domain purchase requ
 - [Browser extension policy update | eBay Partner Network](https://partnernetwork.ebay.com/page/browser-extension-policy-update)
 - [How to Join the eBay Partner Network in 5 Easy Steps | eBay Partner Network](https://partnernetwork.ebay.com/resources/how-to-join-the-ebay-partner-network-in-5-easy-steps)
 - [How to Make Money with the eBay Partner Network in 2026 | Partnerkin](https://partnerkin.com/en/blog/articles/make_money_with_ebay_network)
+- [Welcome to eBay Partner Network — A Checklist to Help You Start Earning (PDF)](https://ir.ebaystatic.com/cr/v/c1/EPN/The%20eBay%20Partner%20Network%20Getting%20Started%20Checklist.pdf)
