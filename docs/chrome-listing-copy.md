@@ -33,9 +33,11 @@ What it doesn't do:
 • No browsing history collected, no profile built, no tracking across sites.
 • No data retained — each price check is handled and forgotten.
 
-Some listings shown may be affiliate links. Where that's the case, the badge tells you so plainly
-and discloses that we may earn a commission, at no extra cost to you. Whether a listing is shown
-is never influenced by whether it happens to be affiliate-tracked.
+Some listings shown are affiliate-tracked. Where that's the case, the badge marks it with a visible
+"Ad" tag and states plainly that we earn a commission if you buy through that link, at no extra
+cost to you — never a hedged "may earn" (a real commission is always earned once a listing is
+affiliate-tracked, so saying otherwise would be misleading). Whether a listing is shown is never
+influenced by whether it happens to be affiliate-tracked.
 
 See our privacy policy for full details on what's processed and what isn't.
 ```
@@ -58,6 +60,14 @@ This is the extension's own backend (a Cloudflare Worker) that proxies eBay Brow
 The extension sends it only a product title, GTIN, and currency to search for matching eBay
 listings — no browsing history, no personal data, no other site access is requested.
 ```
+
+## Why the affiliate paragraph is here, not optional
+
+Confirmed via Chrome's official Affiliate Ads policy (see `docs/A14-epn-chrome-policy-research.md`):
+"Any affiliate program must be described prominently in the product's Chrome Web Store page, user
+interface, and before installation." The disclosure paragraph above isn't just nice-to-have copy —
+the listing page itself is one of the three places Chrome's policy requires it, alongside the
+in-extension UI (already handled by the badge's "Ad" tag) and a before-install disclosure.
 
 ## Caveat — don't publish this copy against the current build as-is
 
