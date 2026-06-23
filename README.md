@@ -36,8 +36,7 @@ Build is numbered "A1, A2, ..." (A-series). Units complete so far:
 The Worker is deployed and live, but configured against eBay's **sandbox** catalog
 (`EBAY_API_BASE_URL = https://api.sandbox.ebay.com`), not production, and `EBAY_CAMPAIGN_ID` is
 unset - so any listing shown links with no real affiliate tracking and matches come from eBay's test
-inventory, not real-world listings. See `docs/A10-submission-readiness.md` for the full gap
-analysis.
+inventory, not real-world listings, pending eBay Partner Network approval and production API access.
 
 ## Load the extension (unpacked)
 
