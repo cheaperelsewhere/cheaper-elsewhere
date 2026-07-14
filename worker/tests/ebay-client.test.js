@@ -81,6 +81,10 @@ test('happy path: fetches a token, searches eBay with the right headers, and ret
     assert.equal(searchRequest.init.headers.Authorization, 'Bearer ' + tokenFixture.access_token);
     assert.equal(searchRequest.init.headers['X-EBAY-C-MARKETPLACE-ID'], 'EBAY_GB');
     assert.equal(searchRequest.init.headers['X-EBAY-C-ENDUSERCTX'], 'affiliateCampaignId=camp123');
+    // A16: filter must appear with literal { } : characters, NOT percent-encoded.
+    // URLSearchParams encodes these, which causes eBay to silently ignore the
+    // filter — confirmed by live production call returning "Open box" items.
+    assert.ok(searchRequest.url.includes('filter=conditions:{NEW}'), 'filter must be literal, not percent-encoded: ' + searchRequest.url);
   } finally {
     global.fetch = originalFetch;
   }

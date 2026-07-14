@@ -75,6 +75,24 @@ test('returns an empty array for missing or empty itemSummaries', () => {
   assert.deepEqual(normalizeSearchResponse({ itemSummaries: [] }), []);
 });
 
+// A16: condition field regression tests.
+// The field exists in the API response and must survive normalisation; a missing
+// condition field must normalise to null (not throw, not silently become undefined).
+test('A16: condition field survives normalisation from a fixture item', () => {
+  const listings = normalizeSearchResponse(fixture);
+  assert.equal(listings[0].condition, 'New');
+});
+
+test('A16: an item with no condition field normalises to condition: null, not undefined', () => {
+  const json = {
+    itemSummaries: [
+      { itemId: 'x', title: 't', price: { value: '5.00', currency: 'USD' }, itemWebUrl: 'https://www.ebay.com/itm/x' },
+    ],
+  };
+  const listing = normalizeSearchResponse(json)[0];
+  assert.equal(listing.condition, null);
+});
+
 // --- Unit A7: shippingCost extraction ---
 
 function itemWith(shippingOptions) {

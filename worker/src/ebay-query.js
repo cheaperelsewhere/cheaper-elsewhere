@@ -26,10 +26,14 @@ function buildSearchQuery(query) {
   if (!marketplaceId) return null;
 
   var gtin = typeof q.gtin === 'string' ? q.gtin.trim() : '';
-  if (gtin) return { marketplaceId: marketplaceId, params: { gtin: gtin } };
+  // filter is returned as a separate top-level field, not in params, because
+  // eBay's filter syntax uses literal { } : that must NOT be percent-encoded
+  // (URLSearchParams.set would turn them into %7B %7D %3A and eBay silently
+  // ignores the filter). ebay-client.js appends it as a raw string.
+  if (gtin) return { marketplaceId: marketplaceId, params: { gtin: gtin }, filter: 'conditions:{NEW}' };
 
   var title = typeof q.title === 'string' ? q.title.trim() : '';
-  if (title) return { marketplaceId: marketplaceId, params: { q: title } };
+  if (title) return { marketplaceId: marketplaceId, params: { q: title }, filter: 'conditions:{NEW}' };
 
   return null;
 }

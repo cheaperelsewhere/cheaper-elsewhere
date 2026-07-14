@@ -18,6 +18,9 @@ async function searchEbay(env, query) {
     url.searchParams.set(key, built.params[key]);
   });
   url.searchParams.set('limit', '10');
+  // built.filter uses eBay's { } : syntax which URLSearchParams would percent-
+  // encode, causing eBay to silently ignore the filter. Append as a raw string.
+  var urlString = built.filter ? url.toString() + '&filter=' + built.filter : url.toString();
 
   var headers = {
     Authorization: 'Bearer ' + token,
@@ -27,7 +30,7 @@ async function searchEbay(env, query) {
     headers['X-EBAY-C-ENDUSERCTX'] = 'affiliateCampaignId=' + env.EBAY_CAMPAIGN_ID;
   }
 
-  var response = await fetch(url, { headers: headers });
+  var response = await fetch(urlString, { headers: headers });
   if (!response.ok) {
     throw new Error('eBay Browse API search failed: ' + response.status);
   }

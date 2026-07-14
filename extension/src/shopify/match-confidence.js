@@ -22,6 +22,18 @@
 var MIN_SAVINGS_PERCENT = 0.1;
 var MIN_SAVINGS_ABSOLUTE = 3;
 
+// Allowlist of eBay condition strings that are unambiguously new. Fails closed:
+// null, undefined, empty string, "Open box", "New other (see details)", or any
+// unrecognised string all return false and the listing is excluded. An
+// unchecked string must never be admitted — the user harm of claiming a used
+// item is "cheaper" is the reason this gate exists.
+var NEW_CONDITION_ALLOWLIST = ['New', 'Brand New', 'New with tags', 'New with box', 'New without tags'];
+
+function isNewCondition(condition) {
+  if (typeof condition !== 'string' || condition === '') return false;
+  return NEW_CONDITION_ALLOWLIST.indexOf(condition) !== -1;
+}
+
 function meetsSavingsThreshold(savingsAmount, ownAmount) {
   return savingsAmount >= ownAmount * MIN_SAVINGS_PERCENT && savingsAmount >= MIN_SAVINGS_ABSOLUTE;
 }
@@ -55,6 +67,14 @@ function findCheaperListing(product, lookupResult) {
   if (!lookupResult || lookupResult.abstained) return null;
 
   var listings = Array.isArray(lookupResult.listings) ? lookupResult.listings : [];
+  if (listings.length === 0) return null;
+
+  // Condition gate: exclude any listing not explicitly recognised as new.
+  // This is a backstop even when the worker query filter is active — a
+  // silently-ignored or malformed filter must not let a used item through.
+  listings = listings.filter(function (listing) {
+    return listing && isNewCondition(listing.condition);
+  });
   if (listings.length === 0) return null;
 
   var ownPrice = product.selectedVariant && product.selectedVariant.price;
@@ -103,6 +123,7 @@ function findCheaperListing(product, lookupResult) {
 var SPEMatchConfidence = {
   MIN_SAVINGS_PERCENT: MIN_SAVINGS_PERCENT,
   MIN_SAVINGS_ABSOLUTE: MIN_SAVINGS_ABSOLUTE,
+  isNewCondition: isNewCondition,
   meetsSavingsThreshold: meetsSavingsThreshold,
   findCheaperListing: findCheaperListing,
 };

@@ -6,7 +6,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { findCheaperListing } = require('../src/shopify/match-confidence.js');
+const { findCheaperListing, isNewCondition } = require('../src/shopify/match-confidence.js');
 
 function product(overrides) {
   return Object.assign(
@@ -18,16 +18,17 @@ function product(overrides) {
   );
 }
 
-// Defaults to free shipping in the same currency, so pre-A7 tests that don't
-// care about shipping keep exercising the same item-price comparison they
-// always did. Pass shippingCost: null/override via extra to test shipping
-// handling specifically.
+// Defaults to free shipping + condition:'New' in the same currency, so pre-A7
+// and pre-A16 tests that don't care about shipping or condition keep exercising
+// the same comparison they always did. Pass shippingCost:/condition: override
+// via extra to test those gates specifically.
 function listing(amount, currency, extra) {
   return Object.assign(
     {
       itemId: 'v1|' + amount + currency + '|0',
       price: { amount: amount, currency: currency },
       shippingCost: { amount: 0, currency: currency },
+      condition: 'New',
     },
     extra
   );
@@ -153,4 +154,80 @@ test('A7: multiple shipping-derived candidates, one with unknown shipping -> tha
   const known = listing(35, 'USD', { shippingCost: { amount: 5, currency: 'USD' } });
   const result = { listings: [unknown, known], abstained: false };
   assert.deepEqual(findCheaperListing(product(), result), expectMatch(known, 40, 'USD'));
+});
+
+// --- Unit A16: condition gate ---
+// The gate exists to prevent suggesting a used/refurb item as "cheaper" than
+// a new one. The failure mode this unit addresses: 93 tests passed while the
+// gate was completely absent. Every case here would have admitted a bad result
+// before A16.
+
+test('A16: isNewCondition - accepts each allowlisted string', () => {
+  assert.equal(isNewCondition('New'), true);
+  assert.equal(isNewCondition('Brand New'), true);
+  assert.equal(isNewCondition('New with tags'), true);
+  assert.equal(isNewCondition('New with box'), true);
+  assert.equal(isNewCondition('New without tags'), true);
+});
+
+test('A16: isNewCondition - rejects used/refurb/open-box condition strings', () => {
+  assert.equal(isNewCondition('Used'), false);
+  assert.equal(isNewCondition('Refurbished'), false);
+  assert.equal(isNewCondition('For parts or not working'), false);
+  assert.equal(isNewCondition('Open box'), false);
+  assert.equal(isNewCondition('New other (see details)'), false);
+  assert.equal(isNewCondition('Seller refurbished'), false);
+  assert.equal(isNewCondition('Certified refurbished'), false);
+  assert.equal(isNewCondition('Like New'), false);
+});
+
+test('A16: isNewCondition - fails closed on null, undefined, empty string, and unrecognised strings', () => {
+  assert.equal(isNewCondition(null), false);
+  assert.equal(isNewCondition(undefined), false);
+  assert.equal(isNewCondition(''), false);
+  assert.equal(isNewCondition('new'), false); // case-sensitive
+  assert.equal(isNewCondition('NEW'), false); // case-sensitive
+  assert.equal(isNewCondition('unknown condition'), false);
+});
+
+test('A16: findCheaperListing - a used listing dramatically cheaper is rejected (the headline bug)', () => {
+  // 20 USD is 60% cheaper than 50 USD, well over the 10%+£3 threshold.
+  // Before A16 this would have been admitted. It must be rejected.
+  const usedCheap = listing(20, 'USD', { condition: 'Used' });
+  const result = { listings: [usedCheap], abstained: false };
+  assert.equal(findCheaperListing(product(), result), null);
+});
+
+test('A16: findCheaperListing - when there is a used-cheapest and a new-cheaper, the new one wins', () => {
+  // used: 15 USD - cheaper than new, but must be excluded
+  // new: 35 USD - qualifies on its own merit (30% + more than 3 absolute)
+  const usedListing = listing(15, 'USD', { condition: 'Used' });
+  const newListing = listing(35, 'USD', { condition: 'New' });
+  const result = { listings: [usedListing, newListing], abstained: false };
+  assert.deepEqual(findCheaperListing(product(), result), expectMatch(newListing, 35, 'USD'));
+});
+
+test('A16: findCheaperListing - listing with condition: null is excluded', () => {
+  const nullCondition = listing(20, 'USD', { condition: null });
+  const result = { listings: [nullCondition], abstained: false };
+  assert.equal(findCheaperListing(product(), result), null);
+});
+
+test('A16: findCheaperListing - listing with missing condition field is excluded', () => {
+  // Construct manually so condition is genuinely absent (the listing() helper
+  // defaults to condition:'New' to keep pre-A16 tests passing).
+  const noCondition = { itemId: 'x', price: { amount: 20, currency: 'USD' }, shippingCost: { amount: 0, currency: 'USD' } };
+  const result = { listings: [noCondition], abstained: false };
+  assert.equal(findCheaperListing(product(), result), null);
+});
+
+test('A16: findCheaperListing - only new listings reach the badge in a mixed-condition set', () => {
+  // Simulate a worker response with mixed conditions. Only 'New with tags'
+  // qualifies; the used and open-box listings are cheaper but excluded.
+  const usedItem = listing(10, 'USD', { condition: 'Used' });
+  const openBox = listing(15, 'USD', { condition: 'Open box' });
+  const newItem = listing(35, 'USD', { condition: 'New with tags' });
+  const expensiveNew = listing(48, 'USD', { condition: 'New' }); // not cheaper enough
+  const result = { listings: [usedItem, openBox, newItem, expensiveNew], abstained: false };
+  assert.deepEqual(findCheaperListing(product(), result), expectMatch(newItem, 35, 'USD'));
 });
