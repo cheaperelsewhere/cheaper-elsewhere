@@ -6,4 +6,4 @@ compatibility_date = "2024-09-23"
 # eBay sandbox host by default - safe for local dev with no risk of touching
 # production listings/affiliate tracking. Switch to https://api.ebay.com only
 # once production credentials exist (see .dev.vars.example).
-EBAY_API_BASE_URL = "https://api.sandbox.ebay.com"
+EBAY_API_BASE_URL = "https://api.ebay.com"
